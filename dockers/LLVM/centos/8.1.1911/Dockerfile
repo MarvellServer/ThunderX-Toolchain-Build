@@ -190,21 +190,20 @@ RUN rpmbuild --target aarch64 -bb ${BUILD_ROOT}/llvm.spec
 RUN mv /opt/llvm /opt/llvm-archive
 RUN rpm -ivh /root/rpmbuild/RPMS/aarch64/llvm-9.0.0-20200624.el8.aarch64.rpm
 
-RUN bye
-
 # Test GCC with spec2017
 RUN mkdir -p /tmp/spec2017
-COPY data/cpu2017.tar.xz /tmp/spec2017
+COPY cpu2017.tar.xz /tmp/spec2017
 
 RUN cd /tmp/spec2017 && \
     tar -xf cpu2017.tar.xz && \
-    ./install.sh -f && \
-    . shrc
+    ./install.sh -f
     
-COPY data/*.cfg /tmp/spec2017/config/
+COPY llvm.cfg /tmp/spec2017/config/
 
+ENV LD_LIBRARY_PATH=${INSTALL_PREFIX}/lib:${LD_LIBRARY_PATH}
 RUN cd /tmp/spec2017/config && \
     echo "running spec2017" && \
-    ../bin/runcpu --define bits=64 --config=gcc.cfg --size=ref --tune=base --rebuild --ignore_errors --iterations=1 --copies=96 --output_format txt 502.gcc_r
+    ../bin/runcpu --define bits=64 --config=llvm.cfg --size=ref --tune=base --rebuild --ignore_errors --iterations=1 --copies=96 --output_format txt 605.mcf_s
+#502.gcc_r
 
-FROM devel_gcc_ilp32 AS devel
+FROM devel_llvm9 AS devel
