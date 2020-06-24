@@ -207,7 +207,6 @@ RUN mv /opt/toolchain-tot-ilp32-mcf /opt/toolchain-tot-ilp32-mcf_build && \
 
 #Test GCC with spec2017 
 RUN mkdir -p /tmp/spec2017 
-#COPY data/lib* ${INSTALLDIR}/lib64/
 COPY data/cpu2017.tar.xz /tmp/spec2017
 
 RUN cd /tmp/spec2017 && \
@@ -216,8 +215,9 @@ RUN cd /tmp/spec2017 && \
 
 COPY data/*.cfg /tmp/spec2017/config/
 
-RUN cd /tmp/spec2017/config && \
+RUN unset TARGET && \
+    cd /tmp/spec2017/config && \
     echo "running spec2017" && \
-    ../bin/runcpu --define bits=64 --config=gcc.cfg --size=ref --tune=base --rebuild --ignore_errors --iterations=1 --copies=96 --output_format txt 502.gcc_r
+    ../bin/runcpu --define bits=64 --config=gcc.cfg --size=ref --tune=base --rebuild --ignore_errors --iterations=1 --copies=96 --output_format txt 605.mcf_s
 
 FROM devel_gcc_ilp32 AS devel
