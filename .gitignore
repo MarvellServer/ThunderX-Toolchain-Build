@@ -1,2 +1,4 @@
 github_rsa
 config
+*.tar.xz
+*.tar.gz
