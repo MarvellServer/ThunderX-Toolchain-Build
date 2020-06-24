@@ -165,20 +165,38 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install checkinstall build-essential automake autoconf libtool pkg-config libcurl4-openssl-dev intltool libxml2-dev libgtk2.0-dev libnotify-dev libglib2.0-dev libevent-dev
 
 # Copy control file
+COPY control /tmp/
 RUN export TODAY=`date "+%Y%m%d"` && \
-    mkdir -p /tmp/flang-9.0.0-ubuntu-20.04-${TODAY}_arm64/DEBIAN
-COPY control /tmp/flang-9.0.0-ubuntu-20.04-${TODAY}_arm64/DEBIAN
+    mkdir -p /tmp/flang-9.0.0-ubuntu-20.04-${TODAY}_arm64/DEBIAN && \
+    mv /tmp/control /tmp/flang-9.0.0-ubuntu-20.04-${TODAY}_arm64/DEBIAN
 
 # create deb file
-RUN cd /tmp && \
+RUN export TODAY=`date "+%Y%m%d"` && \
+    cd /tmp && \
     mv -v /opt /tmp/flang-9.0.0-ubuntu-20.04-${TODAY}_arm64/ && \
     dpkg-deb --build flang-9.0.0-ubuntu-20.04-${TODAY}_arm64
 
-# Cleanup :
-RUN rm -rf ${BUILD_DIR}
-RUN rm -rf /opt/llvm
+# install the deb file
+RUN export TODAY=`date "+%Y%m%d"` && \
+    cd /tmp && \
+    dpkg -i flang-9.0.0-ubuntu-20.04-${TODAY}_arm64.deb
 
 # update path
-ENV PATH=${FLANG_INSTALL_PREFIX}/bin:/usr/local/bin:${PATH}
+ENV PATH=${INSTALL_PREFIX}/bin:/usr/local/bin:${PATH}
+ENV LD_LIBRARY_PATH=${INSTALL_PREFIX}/lib:${LD_LIBRARY_PATH}
+
+# Test GCC with spec2017
+RUN mkdir -p /tmp/spec2017
+COPY cpu2017.tar.xz /tmp/spec2017
+
+RUN cd /tmp/spec2017 && \
+    tar -xf cpu2017.tar.xz && \
+    ./install.sh -f
+    
+COPY llvm.cfg /tmp/spec2017/config/
+
+RUN cd /tmp/spec2017/config && \
+    echo "running spec2017" && \
+    ../bin/runcpu --define bits=64 --config=llvm.cfg --size=ref --tune=base --rebuild --ignore_errors --iterations=1 --copies=96 --output_format txt 605.mcf_s
 
 FROM devel_llvm9 AS devel
