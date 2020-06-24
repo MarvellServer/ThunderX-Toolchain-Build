@@ -164,8 +164,6 @@ RUN cd ${BUILD_DIR}/ThunderX-Toolchain-CT-FLANG && \
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install checkinstall build-essential automake autoconf libtool pkg-config libcurl4-openssl-dev intltool libxml2-dev libgtk2.0-dev libnotify-dev libglib2.0-dev libevent-dev
 
-# generate date
-
 # Copy control file
 RUN export TODAY=`date "+%Y%m%d"` && \
     mkdir -p /tmp/flang-9.0.0-ubuntu-20.04-${TODAY}_arm64/DEBIAN
