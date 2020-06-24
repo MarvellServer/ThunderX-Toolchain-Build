@@ -185,7 +185,7 @@ RUN cd ${BUILD_ROOT} && \
 ENV PATH=${INSTALL_PREFIX}/bin:/usr/local/bin:${PATH}
 ENV PKG_NAME=gcc-tot-ilp32
 RUN cd /opt && \
-    tar -czvf ${PKG_NAME}.tar.gz ilp32/
+    tar -czvf ${PKG_NAME}.tar.gz toolchain-tot-ilp32-mcf/
 
 RUN cd /root && \ 
     rpmdev-setuptree
@@ -200,7 +200,7 @@ RUN cd /root/rpmbuild/SOURCES && \
     QA_RPATHS=$[ 0x0002 ] rpmbuild -bb gcc_ilp32.spec
 
 #Start of run the test
-RUN mv /opt/ilp32 /opt/ilp32_build && \
+RUN mv /opt/toolchain-tot-ilp32-mcf /opt/toolchain-tot-ilp32-mcf_build && \
     cd /root/rpmbuild/RPMS/aarch64 && \
     export TODAY=`date "+%Y%m%d"` && \
     rpm -ivh ${PKG_NAME}-${TODAY}-0.el8.aarch64.rpm
@@ -219,8 +219,5 @@ COPY data/*.cfg /tmp/spec2017/config/
 RUN cd /tmp/spec2017/config && \
     echo "running spec2017" && \
     ../bin/runcpu --define bits=64 --config=gcc.cfg --size=ref --tune=base --rebuild --ignore_errors --iterations=1 --copies=96 --output_format txt 502.gcc_r
-
-# LLVM : configure
-RUN gcc
 
 FROM devel_gcc_ilp32 AS devel
