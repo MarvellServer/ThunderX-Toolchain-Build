@@ -4,14 +4,14 @@
 ###############################################################################
 
 # define base
-FROM centos_base as llvm_build
+FROM base_PLATFORM_NAME_PLATFORM_VERSION as build_llvm_TOOLCHAIN_BRANCH_PLATFORM_NAME_PLATFORM_VERSION
 
 # define env
 ENV NTHREADS=64
 ENV DIR_BASE=/tmp/llvm
 ENV DIR_SOURCE=${DIR_BASE}/source
 ENV DIR_BUILD=${DIR_BASE}/build
-ENV INSTALL_PREFIX=/opt/llvm/TOOLCHAIN_VERSION_CFG
+ENV INSTALL_PREFIX=/opt/llvm/TOOLCHAIN_VERSION
 
 # create directories
 RUN mkdir -p ${DIR_BASE}

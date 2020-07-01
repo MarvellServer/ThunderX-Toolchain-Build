@@ -3,24 +3,24 @@
 # CentOS Packaging                                                            #
 ###############################################################################
 
-FROM centos_base as centos_package
+FROM base_centos_PLATFORM_VERSION as pkg_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_centos_PLATFORM_VERSION
 
 # env
-ENV INSTALL_PREFIX=/opt/llvm/TOOLCHAIN_VERSION_CFG
+ENV INSTALL_PREFIX=/opt/TOOLCHAIN_NAME/TOOLCHAIN_VERSION
 
 # install rpm tools
 RUN dnf -y install rpm-build rpmdevtools
 
 # copy install dir
-COPY --from=llvm_build /opt/llvm /opt/llvm
+COPY --from=build_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_centos_PLATFORM_VERSION /opt/TOOLCHAIN_NAME /opt/TOOLCHAIN_NAME
 
 # create tar file
 RUN cd /tmp && \
-    tar -czvf /tmp/llvm-TOOLCHAIN_VERSION_CFG.tar.gz ${INSTALL_PREFIX}
+    tar -czvf /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION.tar.gz ${INSTALL_PREFIX}
 
 # get spec file
-COPY data/llvm.spec /tmp/llvm.spec
+COPY data/TOOLCHAIN_NAME.spec /tmp/TOOLCHAIN_NAME.spec
 
 # build RPMS
 RUN cd /tmp && \
-    rpmbuild --target aarch64 -bb ./llvm.spec
+    rpmbuild --target aarch64 -bb ./TOOLCHAIN_NAME.spec
