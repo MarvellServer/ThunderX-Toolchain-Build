@@ -1,4 +1,6 @@
 github_rsa
-config
+ssh_config
+build
+extras
 *.tar.xz
 *.tar.gz

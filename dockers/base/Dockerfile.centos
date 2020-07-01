@@ -1,0 +1,53 @@
+
+###############################################################################
+# CentOS Base                                                                 #
+###############################################################################
+
+FROM centos:PLATFORM_VERSION_CFG as centos_base
+
+# install dnf plugins and enable epel repo
+RUN dnf -y install dnf-plugins-core epel-release
+
+# enable additional repos
+RUN dnf config-manager --set-enabled PowerTools
+RUN dnf config-manager --set-enabled extras
+
+# install development packages
+RUN dnf -y makecache
+RUN dnf -y install automake \
+                   autoconf \
+                   libtool \
+                   m4 \
+                   gcc \
+                   gcc-c++ \
+                   gcc-gfortran \
+                   git \
+                   subversion \
+                   wget \
+                   rsync \
+                   make \
+                   cmake \
+                   pkg-config \
+                   ca-certificates \
+                   flex \
+                   texinfo \
+                   help2man \
+                   unzip \
+                   gawk \
+                   swig \
+                   bison \
+                   patch \
+                   patchutils \
+                   diffutils \
+                   hwloc \                   
+                   numactl \
+                   numactl-devel \
+                   python3 \
+                   python3-devel \
+                   openssl-devel \
+                   ncurses-devel \
+                   libxml2-devel \
+                   libedit-devel \
+                   libffi-devel \
+                   binutils-devel \
+                   openssh-clients

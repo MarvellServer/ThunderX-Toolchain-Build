@@ -1,0 +1,57 @@
+
+###############################################################################
+# LLVM Source                                                                 #
+###############################################################################
+
+FROM centos:8.1.1911 as llvm_source
+
+# install pre-requisites
+RUN dnf -y install git
+
+# define env
+ENV DIR_BASE=/tmp/llvm
+ENV DIR_SOURCE=${DIR_BASE}/source
+
+# set up ssh keys
+COPY data/github_rsa /root/.ssh/
+COPY data/config /root/.ssh/
+
+# create dirs
+RUN mkdir -p ${DIR_BASE}
+RUN mkdir -p ${DIR_SOURCE}
+
+# clone repos : ThunderX-Toolchain-CT-LLVM-9
+RUN cd ${DIR_SOURCE} && \
+    git clone git@github.com:MarvellServer/ThunderX-Toolchain-CT-LLVM-9.git
+
+# clone repos : llvm-project
+RUN cd ${DIR_SOURCE} && \
+    git clone https://github.com/llvm/llvm-project.git
+
+# clone repos : flang-driver
+RUN cd ${DIR_SOURCE} && \
+    git clone https://github.com/flang-compiler/flang-driver.git
+
+# clone repos : ThunderX-Toolchain-CT-FLANG
+RUN cd ${DIR_SOURCE} && \
+    git clone git@github.com:MarvellServer/ThunderX-Toolchain-CT-FLANG.git
+
+# update and checkout : ThunderX-Toolchain-CT-LLVM-9
+RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-CT-LLVM-9 && \
+    git pull origin && \
+    git checkout TOOLCHAIN_BRANCH_CFG
+
+# update and checkout : llvm-project
+RUN cd ${DIR_SOURCE}/llvm-project && \
+    git pull origin && \
+    git checkout origin/release/9.x
+
+# update and checkout : flang-driver
+RUN cd ${DIR_SOURCE}/flang-driver && \
+    git pull origin && \
+    git checkout release_90
+
+# update and checkout : ThunderX-Toolchain-CT-FLANG
+RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-CT-FLANG && \
+    git pull origin && \
+    git checkout TOOLCHAIN_BRANCH_CFG

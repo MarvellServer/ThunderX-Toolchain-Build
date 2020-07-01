@@ -1,0 +1,5 @@
+toolchain=llvm
+toolchain_version=9.0.0
+toolchain_branch=ctt_latest_release
+platform=centos
+platform_version=8.1.1911

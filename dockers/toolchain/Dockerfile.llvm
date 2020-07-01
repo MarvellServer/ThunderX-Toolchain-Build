@@ -1,0 +1,97 @@
+
+###############################################################################
+# LLVM Build                                                                 #
+###############################################################################
+
+# define base
+FROM centos_base as llvm_build
+
+# define env
+ENV NTHREADS=64
+ENV DIR_BASE=/tmp/llvm
+ENV DIR_SOURCE=${DIR_BASE}/source
+ENV DIR_BUILD=${DIR_BASE}/build
+ENV INSTALL_PREFIX=/opt/llvm/TOOLCHAIN_VERSION_CFG
+
+# create directories
+RUN mkdir -p ${DIR_BASE}
+RUN mkdir -p ${DIR_SOURCE}
+RUN mkdir -p ${DIR_BUILD}
+
+# copy sources
+COPY --from=llvm_source /tmp/llvm/source/ThunderX-Toolchain-CT-LLVM-9 /tmp/llvm/source/ThunderX-Toolchain-CT-LLVM-9
+COPY --from=llvm_source /tmp/llvm/source/llvm-project/clang           /tmp/llvm/source/clang
+COPY --from=llvm_source /tmp/llvm/source/llvm-project/lld             /tmp/llvm/source/lld
+COPY --from=llvm_source /tmp/llvm/source/llvm-project/openmp          /tmp/llvm/source/openmp
+COPY --from=llvm_source /tmp/llvm/source/ThunderX-Toolchain-CT-FLANG  /tmp/llvm/source/ThunderX-Toolchain-CT-FLANG
+COPY --from=llvm_source /tmp/llvm/source/flang-driver                 /tmp/llvm/source/flang-driver
+
+# configure, build and install : ThunderX-Toolchain-CT-LLVM-9
+RUN cd ${DIR_BUILD} && \
+    mkdir -p ThunderX-Toolchain-CT-LLVM-9 && \
+    cd ThunderX-Toolchain-CT-LLVM-9 && \
+    cmake ${DIR_SOURCE}/ThunderX-Toolchain-CT-LLVM-9 \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+              -DLLVM_ENABLE_PROJECTS='clang;openmp;lld' \
+              -DLLVM_TARGETS_TO_BUILD=AArch64 \
+              -DCMAKE_C_COMPILER=gcc \
+              -DCMAKE_CXX_COMPILER=g++ \
+              -DCMAKE_C_FLAGS="-w -fpermissive" \
+              -DCMAKE_CXX_FLAGS="-w -fpermissive" && \
+    make -j${NTHREADS} | tee llvm-build.log && \
+    make install | tee llvm-install.log
+
+# update environment
+ENV LDFLAGS="-Wl,-rpath=${INSTALL_PREFIX}/lib -Wl,-rpath-link=${INSTALL_PREFIX}/lib ${LDFLAGS}"
+
+# configure, build and install : libpgmath
+RUN cd ${BUILD_DIR} && \
+    mkdir libpgmath && \
+    cd  libpgmath && \
+    cmake ${DIR_SOURCE}/ThunderX-Toolchain-CT-FLANG/runtime/libpgmath \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+              -DCMAKE_C_COMPILER=gcc \
+              -DCMAKE_CXX_COMPILER=g++ \
+              -DCMAKE_C_FLAGS="-w" \
+              -DCMAKE_CXX_FLAGS="-w" && \
+    make -j${NTHREADS} | tee libpgmath-build.log && \
+    make -j${NTHREADS} install | tee libpgmath-install.log
+
+# configure, build and install : flang-driver
+RUN cd ${BUILD_DIR} && \
+    mkdir flang-driver && \
+    cd flang-driver && \
+    cmake ${DIR_SOURCE}/flang-driver \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+              -DLLVM_TARGETS_TO_BUILD=AArch64 \
+              -DLLVM_CONFIG=${INSTALL_PREFIX}/bin/llvm-config \
+              -DCMAKE_C_COMPILER=gcc \
+              -DCMAKE_CXX_COMPILER=g++ \
+              -DCMAKE_C_FLAGS="-w" \
+              -DCMAKE_CXX_FLAGS="-w" \
+              -DGCC_INSTALL_PREFIX=/usr && \
+    make -j${NTHREADS} | tee flang-driver-build.log && \
+    make -j${NTHREADS} install | tee flang-driver-install.log
+
+# configure, build and install : flang
+RUN cd ${BUILD_DIR} && \
+    mkdir ThunderX-Toolchain-CT-FLANG && \
+    cd ThunderX-Toolchain-CT-FLANG && \
+    cmake ${DIR_SOURCE}/ThunderX-Toolchain-CT-FLANG \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+              -DLLVM_TARGETS_TO_BUILD=AArch64 \
+              -DLLVM_CONFIG=${INSTALL_PREFIX}/bin/llvm-config \
+              -DCMAKE_C_COMPILER=${INSTALL_PREFIX}/bin/clang \
+              -DCMAKE_CXX_COMPILER=${INSTALL_PREFIX}/bin/clang++ \
+              -DCMAKE_Fortran_COMPILER=${INSTALL_PREFIX}/bin/flang \
+              -DCMAKE_C_FLAGS="-w" \
+              -DCMAKE_CXX_FLAGS="-w" \
+              -DCMAKE_Fortran_FLAGS="-w ${LDFLAGS}" \
+              -DFLANG_LLVM_EXTENSIONS=ON \
+              -DGCC_INSTALL_PREFIX=/usr && \
+     make -j${NTHREADS} | tee flang-build.log && \
+     make -j${NTHREADS} install | tee flang-install.log
