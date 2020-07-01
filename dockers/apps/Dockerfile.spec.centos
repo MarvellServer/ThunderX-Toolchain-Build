@@ -1,0 +1,35 @@
+
+###############################################################################
+# SPEC CPU2017                                                                 #
+###############################################################################
+
+FROM base_centos_PLATFORM_VERSION as spec_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_centos_PLATFORM_VERSION
+
+# env
+ENV INSTALL_PREFIX=/opt/TOOLCHAIN_NAME/TOOLCHAIN_VERSION
+
+# copy toolchain rpm
+COPY --from=pkg_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_centos_PLATFORM_VERSION /root/rpmbuild/RPMS/aarch64/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-20200701.el8.aarch64.rpm /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-20200701.el8.aarch64.rpm
+
+# install RPM
+RUN dnf -y install /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-20200701.el8.aarch64.rpm
+
+# update paths
+ENV PATH=${INSTALL_PREFIX}/bin:/usr/local/bin:${PATH}
+
+# copy spec files
+RUN mkdir -p /tmp/spec2017
+COPY data/cpu2017.tar.xz /tmp/spec2017
+
+# extract
+RUN cd /tmp/spec2017 && \
+    tar -xf cpu2017.tar.xz && \
+    ./install.sh -f
+
+# copy config file
+COPY data/TOOLCHAIN_NAME.cfg /tmp/spec2017/config/
+
+# run spec
+RUN cd /tmp/spec2017/config && \
+    echo "running spec2017" && \
+    ../bin/runcpu --define bits=64 --config=TOOLCHAIN_NAME.cfg --size=ref --tune=base --rebuild --ignore_errors --iterations=1 --copies=64 --output_format txt 502.gcc_r
