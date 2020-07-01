@@ -1,4 +1,4 @@
-Package: flang
+Package: llvm
 Version: 9.0.0-ct-ubuntu-20.04-20200623
 Section: custome
 Priority: optional

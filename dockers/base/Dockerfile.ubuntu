@@ -1,0 +1,51 @@
+
+###############################################################################
+# Ubuntu Base                                                                 #
+###############################################################################
+
+FROM ubuntu:PLATFORM_VERSION as base_ubuntu_PLATFORM_VERSION
+
+# install development packages
+RUN apt-get update -y
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        automake \
+        autoconf \
+        libtool \
+	      m4 \
+        gcc \
+        g++ \
+        gfortran \
+        git \
+        subversion \
+        wget \
+        rsync \
+        make \
+        cmake \
+        pkg-config \
+        ca-certificates \
+        flex \
+        texinfo \
+        help2man \
+        unzip \
+        gawk \
+        swig \
+        bison \
+        patch \
+        patchutils \
+        diffutils \
+        hwloc \
+        hwloc \
+        libnuma-dev\
+        python3 \ 
+        python3-pip \
+        python3-dev \
+        libtool-bin \
+        libncurses5-dev \
+        bison \
+        libssl-dev \
+        libxml2-dev \
+        libedit-dev \
+        libffi-dev \
+        binutils-dev \
+        sudo \
+        openssh-client
