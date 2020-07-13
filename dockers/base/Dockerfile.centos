@@ -50,4 +50,11 @@ RUN dnf -y install automake \
                    libedit-devel \
                    libffi-devel \
                    binutils-devel \
-                   openssh-clients
+                   openssh-clients \
+                   gettext
+
+# update alternatives
+RUN alternatives --set python /usr/bin/python3
+RUN update-alternatives --install /usr/bin/pydoc          pydoc         /usr/bin/pydoc3         10
+RUN update-alternatives --install /usr/bin/python-config  python-config /usr/bin/python3-config 10
+RUN update-alternatives --install /usr/bin/pip            pip           /usr/bin/pip3           10

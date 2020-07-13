@@ -1,0 +1,64 @@
+
+###############################################################################
+# GCC Source                                                                  #
+###############################################################################
+
+FROM centos:8.1.1911 as gcc_source
+
+# install pre-requisites
+RUN dnf -y install git
+
+# define env
+ENV DIR_BASE=/tmp/gcc
+ENV DIR_SOURCE=${DIR_BASE}/source
+
+# set up ssh keys
+COPY data/github_rsa /root/.ssh/
+COPY data/config /root/.ssh/
+
+# create dirs
+RUN mkdir -p ${DIR_BASE}
+RUN mkdir -p ${DIR_SOURCE}
+
+# clone repos : binutils-gdb
+RUN cd ${DIR_SOURCE} && \
+    git clone http://sourceware.org/git/binutils-gdb.git
+
+# clone repos : linux-kernel
+RUN cd ${DIR_SOURCE} && \
+    git clone git@github.com:MarvellServer/ThunderX-ilp32-linux.git
+
+# clone repos : glibc-ilp32
+RUN cd ${DIR_SOURCE} && \
+    git clone git@github.com:MarvellServer/ThunderX-Toolchain-glibc-ilp32.git
+
+# clone repos : gcc-ilp32
+RUN cd ${DIR_SOURCE} && \
+    git clone git@github.com:MarvellServer/ThunderX-Toolchain-gcc-ilp32.git
+
+# update and checkout : binutils-gdb
+RUN cd ${DIR_SOURCE}/binutils-gdb && \
+    git pull && \
+    git checkout master
+
+# update and checkout : ThunderX-ilp32-linux
+RUN cd ${DIR_SOURCE}/ThunderX-ilp32-linux && \
+    git pull && \
+    git checkout ilp32-5.4.y
+
+# update and checkout : ThunderX-Toolchain-glibc-ilp32
+RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-glibc-ilp32 && \
+    git pull && \
+    git checkout v-0.2
+
+# update and checkout : ThunderX-Toolchain-gcc-ilp32
+RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-gcc-ilp32 && \
+    git pull && \
+    git checkout TOOLCHAIN_BRANCH
+
+# install bzip2
+RUN dnf -y install bzip2 wget
+
+# download_prerequisites
+RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-gcc-ilp32 && \
+    contrib/download_prerequisites

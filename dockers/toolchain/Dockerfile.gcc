@@ -1,0 +1,130 @@
+
+###############################################################################
+# GCC Build                                                                   #
+###############################################################################
+
+# define base
+FROM base_PLATFORM_NAME_PLATFORM_VERSION as build_gcc_TOOLCHAIN_BRANCH_PLATFORM_NAME_PLATFORM_VERSION
+
+# define env
+ENV NTHREADS=64
+ENV DIR_BASE=/tmp/gcc
+ENV DIR_SOURCE=${DIR_BASE}/source
+ENV DIR_BUILD=${DIR_BASE}/build
+ENV INSTALL_PREFIX=/opt/gcc/TOOLCHAIN_VERSION
+
+# create directories
+RUN mkdir -p ${DIR_BASE}
+RUN mkdir -p ${DIR_SOURCE}
+RUN mkdir -p ${DIR_BUILD}
+
+# copy sources
+COPY --from=gcc_source /tmp/gcc/source/binutils-gdb                   /tmp/gcc/source/binutils-gdb
+COPY --from=gcc_source /tmp/gcc/source/ThunderX-ilp32-linux           /tmp/gcc/source/ThunderX-ilp32-linux
+COPY --from=gcc_source /tmp/gcc/source/ThunderX-Toolchain-glibc-ilp32 /tmp/gcc/source/ThunderX-Toolchain-glibc-ilp32
+COPY --from=gcc_source /tmp/gcc/source/ThunderX-Toolchain-gcc-ilp32   /tmp/gcc/source/ThunderX-Toolchain-gcc-ilp32
+
+# define local vars
+ENV TARGET aarch64-linux-gnu
+ENV MULTILIB_CONF -with-multilib-list=lp64,ilp32
+ENV LIBMVEC_CONF --enable-mathvec
+ENV CONF --prefix=${INSTALL_PREFIX} --with-sysroot=${INSTALL_PREFIX} \
+         --target=${TARGET} --host=${TARGET} --build=${TARGET}
+
+# update PATH
+ENV PATH ${INSTALL_PREFIX}/bin:${INSTALL_PREFIX}/usr/bin:${PATH}
+
+# create directories
+RUN mkdir -p ${INSTALL_PREFIX} && \
+    mkdir -p ${INSTALL_PREFIX}/lib && \
+    mkdir -p ${INSTALL_PREFIX}/lib64 && \
+    mkdir -p ${INSTALL_PREFIX}/libilp32 && \
+    mkdir -p ${INSTALL_PREFIX}/include && \
+    mkdir -p ${INSTALL_PREFIX}/usr && \
+    mkdir -p ${INSTALL_PREFIX}/usr/lib && \
+    mkdir -p ${INSTALL_PREFIX}/usr/lib64 && \
+    mkdir -p ${INSTALL_PREFIX}/usr/libilp32
+
+# configure, build and install : binutils-gdb
+ENV BUILD_COMP=binutils-gdb
+ENV BINUTILS_CONF ${CONF}
+RUN cd ${DIR_BUILD} && \
+    mkdir -p ${BUILD_COMP} && \
+    cd ${BUILD_COMP} && \
+    ${DIR_SOURCE}/${BUILD_COMP}/configure ${BINUTILS_CONF} && \
+    make -Otarget -j${NTHREADS} | tee ${BUILD_COMP}-build.log && \
+    make -Otarget install | tee ${BUILD_COMP}-install.log
+
+# configure, build and install : ThunderX-Toolchain-gcc-ilp32 / init
+ENV BUILD_COMP=ThunderX-Toolchain-gcc-ilp32
+ENV GCC_CONF ${CONF} --enable-gnu-indirect-function \
+             --with-advance-toolchain=${INSTALL_PREFIX} ${MULTILIB_CONF}
+ENV INIT_GCC_CONF --with-newlib --without-headers \
+                  --enable-languages=c --enable-threads=no \
+                  --disable-shared --disable-decimal-float \
+                  --disable-libsanitizer --disable-bootstrap
+RUN cd ${DIR_BUILD} && \
+    mkdir -p ${BUILD_COMP}-init && \
+    cd ${BUILD_COMP}-init && \
+    ${DIR_SOURCE}/${BUILD_COMP}/configure ${GCC_CONF} ${INIT_GCC_CONF} && \
+    make -Otarget -j${NTHREADS} all-gcc all-target-libgcc | tee ${BUILD_COMP}-init-build.log && \
+    make -Otarget install-gcc install-target-libgcc | tee ${BUILD_COMP}-init-install.log
+
+# configure, build and install : ThunderX-ilp32-linux
+ENV BUILD_COMP=ThunderX-ilp32-linux
+RUN cd ${DIR_SOURCE}/${BUILD_COMP} && \
+    export CC=/usr/bin/gcc && \
+    make -Otarget headers_install ARCH=arm64 INSTALL_HDR_PATH=${INSTALL_PREFIX}/usr HOSTCC=/usr/bin/gcc && \
+    unset CC
+
+# configure, build and install : ThunderX-Toolchain-glibc-ilp32 / lib64
+ENV BUILD_COMP=ThunderX-Toolchain-glibc-ilp32
+ENV GLIBC_CONF --with-headers=${INSTALL_PREFIX}/usr/include \
+               ${LIBMVEC_CONF} --enable-obsolete-rpc \
+               --prefix=/usr --host=${TARGET}
+RUN export BUILD_CC=/usr/bin/gcc && \
+    export CC="${INSTALL_PREFIX}/bin/${TARGET}-gcc -mabi=lp64" && \
+    export CXX="${INSTALL_PREFIX}/bin/${TARGET}-g++ -mabi=lp64" && \
+    export AR="${INSTALL_PREFIX}/bin/ar" && \
+    export RANLIB="${INSTALL_PREFIX}/bin/ranlib" && \
+    export LD="${INSTALL_PREFIX}/bin/ld" && \
+    export AS="${INSTALL_PREFIX}/bin/as" && \
+    cd ${DIR_BUILD} && \
+    mkdir -p ${BUILD_COMP}-lib64 && \
+    cd ${BUILD_COMP}-lib64 && \
+    ${DIR_SOURCE}/${BUILD_COMP}/configure ${GLIBC_CONF} && \
+    make -Otarget -j${NTHREADS} all | tee ${BUILD_COMP}-lib64-build.log && \
+    make -Otarget DESTDIR=${INSTALL_PREFIX} install | tee ${BUILD_COMP}-lib64-install.log && \
+    unset BUILD_CC CC CXX AR RANLIB AS LD
+
+# configure, build and install : ThunderX-Toolchain-glibc-ilp32 / lib32
+ENV BUILD_COMP=ThunderX-Toolchain-glibc-ilp32
+ENV GLIBC_CONF --with-headers=${INSTALL_PREFIX}/usr/include \
+               ${LIBMVEC_CONF} --enable-obsolete-rpc \
+               --prefix=/usr --host=${TARGET}
+RUN export BUILD_CC=/usr/bin/gcc && \
+    export CC="${INSTALL_PREFIX}/bin/${TARGET}-gcc -mabi=ilp32" && \
+    export CXX="${INSTALL_PREFIX}/bin/${TARGET}-g++ -mabi=ilp32" && \
+    export AR="${INSTALL_PREFIX}/bin/ar" && \
+    export RANLIB="${INSTALL_PREFIX}/bin/ranlib" && \
+    export LD="${INSTALL_PREFIX}/bin/ld" && \
+    export AS="${INSTALL_PREFIX}/bin/as" && \
+    cd ${DIR_BUILD} && \
+    mkdir -p ${BUILD_COMP}-lib32 && \
+    cd ${BUILD_COMP}-lib32 && \
+    ${DIR_SOURCE}/${BUILD_COMP}/configure ${GLIBC_CONF} && \
+    make -Otarget -j${NTHREADS} all | tee ${BUILD_COMP}-lib32-build.log && \
+    make -Otarget DESTDIR=${INSTALL_PREFIX} install | tee ${BUILD_COMP}-lib32-install.log && \
+    unset BUILD_CC CC CXX AR RANLIB AS LD
+
+# configure, build and install : ThunderX-Toolchain-gcc-ilp32 / final
+ENV BUILD_COMP=ThunderX-Toolchain-gcc-ilp32
+ENV FINAL_GCC_CONF --enable-languages=c,c++,fortran \
+                   --disable-libsanitizer --enable-bootstrap \
+                   --enable-threads --enable-shared
+RUN cd ${DIR_BUILD} && \
+    mkdir -p ${BUILD_COMP}-final && \
+    cd ${BUILD_COMP}-final && \
+    ${DIR_SOURCE}/${BUILD_COMP}/configure ${GCC_CONF} ${FINAL_GCC_CONF} && \
+    make -Otarget -j${NTHREADS} all | tee ${BUILD_COMP}-final-build.log && \
+    make -Otarget DESTDIR=${INSTALL_PREFIX} install | tee ${BUILD_COMP}-final-install.log

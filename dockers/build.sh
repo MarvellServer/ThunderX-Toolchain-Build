@@ -42,9 +42,11 @@ cd ${BASE_DIR}
 cp -r extras/github_rsa     ${BUILD_DIR}/data/github_rsa
 cp -r extras/ssh_config     ${BUILD_DIR}/data/config
 cp -r package/llvm.spec     ${BUILD_DIR}/data/llvm.spec
+cp -r package/gcc.spec      ${BUILD_DIR}/data/gcc.spec
 cp -r package/llvm.ctrl     ${BUILD_DIR}/data/control
 cp -r extras/cpu2017.tar.xz ${BUILD_DIR}/data/cpu2017.tar.xz
 cp -r apps/llvm.cfg         ${BUILD_DIR}/data/llvm.cfg
+cp -r apps/gcc.cfg          ${BUILD_DIR}/data/gcc.cfg
 
 # build docker
 cd ${BUILD_DIR}
