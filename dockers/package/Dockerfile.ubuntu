@@ -31,16 +31,16 @@ COPY --from=build_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_ubuntu_PLATFORM_VERSION /opt/T
 # Copy control file
 COPY data/control /tmp/
 RUN export TODAY=`date "+%Y%m%d"` && \
-    mkdir -p /tmp/llvm-9.0.0-ubuntu-20.04-${TODAY}_arm64/DEBIAN && \
-    mv /tmp/control /tmp/llvm-9.0.0-ubuntu-20.04-${TODAY}_arm64/DEBIAN
+    mkdir -p /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-ubuntu-PLATFORM_VERSION-${TODAY}_arm64/DEBIAN && \
+    mv /tmp/control /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-ubuntu-PLATFORM_VERSION-${TODAY}_arm64/DEBIAN
 
 # create deb file
 RUN export TODAY=`date "+%Y%m%d"` && \
     cd /tmp && \
-    mv -v /opt /tmp/llvm-9.0.0-ubuntu-20.04-${TODAY}_arm64/ && \
-    dpkg-deb --build llvm-9.0.0-ubuntu-20.04-${TODAY}_arm64
+    mv -v /opt /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-ubuntu-PLATFORM_VERSION-${TODAY}_arm64/ && \
+    dpkg-deb --build TOOLCHAIN_NAME-TOOLCHAIN_VERSION-ubuntu-PLATFORM_VERSION-${TODAY}_arm64
 
 # install the deb file
 RUN export TODAY=`date "+%Y%m%d"` && \
     cd /tmp && \
-    dpkg -i llvm-9.0.0-ubuntu-20.04-${TODAY}_arm64.deb
+    dpkg -i TOOLCHAIN_NAME-TOOLCHAIN_VERSION-ubuntu-PLATFORM_VERSION-${TODAY}_arm64.deb

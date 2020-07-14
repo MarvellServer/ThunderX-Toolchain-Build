@@ -1,5 +1,5 @@
 toolchain_name=gcc
 toolchain_version=10.0.0
 toolchain_branch=struct_opt
-platform_name=centos
-platform_version=8.1.1911
+platform_name=ubuntu
+platform_version=20.04

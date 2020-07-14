@@ -48,4 +48,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         libffi-dev \
         binutils-dev \
         sudo \
-        openssh-client
+        openssh-client \
+        lbzip2 \
+        gettext
+
+# update python defaults
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
