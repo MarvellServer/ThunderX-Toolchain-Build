@@ -8,23 +8,6 @@ FROM base_ubuntu_PLATFORM_VERSION as pkg_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_ubuntu_
 # env
 ENV INSTALL_PREFIX=/opt/TOOLCHAIN_NAME/TOOLCHAIN_VERSION
 
-# install rpm tools
-#RUN apt-get -y update
-#RUN DEBIAN_FRONTEND=noninteractive apt-get -y install \
-#        checkinstall \
-#        build-essential \
-#        automake \
-#        autoconf \
-#        libtool \
-#        pkg-config \
-#        libcurl4-openssl-dev \
-#        intltool \
-#        libxml2-dev \
-#        libgtk2.0-dev \
-#        libnotify-dev \
-#        libglib2.0-dev \
-#        libevent-dev
-
 # copy install dir
 COPY --from=build_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_ubuntu_PLATFORM_VERSION /opt/TOOLCHAIN_NAME /opt/TOOLCHAIN_NAME
 

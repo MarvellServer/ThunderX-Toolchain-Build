@@ -13,6 +13,8 @@ echo ${toolchain_branch}
 # create build directory
 mkdir -p ${BUILD_DIR}
 mkdir -p ${BUILD_DIR}/data
+
+# create empty file
 echo > ${BUILD_DIR}/Dockerfile
 
 # add source dockerfile
@@ -51,7 +53,7 @@ cp -r apps/gcc.cfg          ${BUILD_DIR}/data/gcc.cfg
 # build docker
 cd ${BUILD_DIR}
 image_tag=${toolchain_name}_${platform_name}_${platform_version}:${toolchain_branch}
-docker build --add-host mirror.fileplanet.com:0.0.0.0 -t ${image_tag} .
+docker build --add-host mirror.fileplanet.com:0.0.0.0 --build-arg DATESTRING=`date +"%Y%m%d"` -t ${image_tag} .
 
 # copy the rpm file
 #docker run ${image_tag}
