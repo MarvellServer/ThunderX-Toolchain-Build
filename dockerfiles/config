@@ -1,8 +1,8 @@
 DISTRO_NAME=centos
 DISTRO_VERSION=8.1.1911
 TOOLCHAIN_NAME=gcc-ilp32
-TOOLCHAIN_VERSION=10.0.1
-GCC_BRANCH=struct_opt
+TOOLCHAIN_VERSION=10.1.0
+GCC_BRANCH=relGCC10-struct_opt-vec_int_cost
 LLVM_BRANCH=ctt_latest_release
 FLANG_BRANCH=ctt_latest_release
 APP=spec
