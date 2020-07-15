@@ -56,7 +56,7 @@ RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-glibc-ilp32 && \
 # update and checkout : ThunderX-Toolchain-gcc-ilp32
 RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-gcc-ilp32 && \
     git pull && \
-    git checkout struct_opt
+    git checkout relGCC10-struct_opt-vec_int_cost
 
 # download_prerequisites
 RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-gcc-ilp32 && \
