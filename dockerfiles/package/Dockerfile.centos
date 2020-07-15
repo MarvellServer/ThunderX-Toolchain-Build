@@ -34,6 +34,6 @@ RUN cd /tmp && \
 RUN rm -rf /opt/TOOLCHAIN_NAME
 
 # install the toolchain
-RUN export PLATFORM_ID=`grep PLATFORM_ID /etc/os-release | cut -d ":" -f 2- | tr -d '"'` && \
+RUN export PLATFORM_ID=$(grep PLATFORM_ID /etc/os-release | tr -s -c [:alnum:] _ | cut -d '_' -f 4-4) && \
     export ARCH=`uname -m` && \
     dnf -y install /root/rpmbuild/RPMS/aarch64/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}.${PLATFORM_ID}.${ARCH}.rpm

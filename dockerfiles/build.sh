@@ -70,7 +70,7 @@ sed -i "s/TOOLCHAIN_VERSION/${TOOLCHAIN_VERSION}/g" ${BUILD_DIR}/Dockerfile
 # update template files
 if [ "${TOOLCHAIN_NAME}" == "gcc-ilp32" ]
 then
-  
+
   # update the template
   sed -i "s/GCC_BRANCH/${GCC_BRANCH}/g"   ${BUILD_DIR}/Dockerfile
 
@@ -86,7 +86,7 @@ fi
 # copy and update config files
 if [ "${DISTRO_NAME}" == "centos" ]
 then
-  
+
   # copy config files
   cp -r package/${TOOLCHAIN_NAME}.spec                ${BUILD_DIR}/data/${TOOLCHAIN_NAME}.spec
   sed -i "s/TOOLCHAIN_VERSION/${TOOLCHAIN_VERSION}/g" ${BUILD_DIR}/data/${TOOLCHAIN_NAME}.spec
