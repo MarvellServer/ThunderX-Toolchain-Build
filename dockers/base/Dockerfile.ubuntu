@@ -3,7 +3,7 @@
 # Ubuntu Base                                                                 #
 ###############################################################################
 
-FROM ubuntu:PLATFORM_VERSION as base_ubuntu_PLATFORM_VERSION
+FROM ubuntu:DISTRO_VERSION as base_ubuntu_DISTRO_VERSION
 
 # install development packages
 RUN apt-get update -y

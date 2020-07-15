@@ -1,4 +1,4 @@
-Package: llvm
+Package: gcc-ilp32
 Version: TOOLCHAIN_VERSION-DATESTRING-DISTRO_NAME-DISTRO_VERSION
 Section: custom
 Priority: optional
@@ -6,4 +6,4 @@ Architecture: arm64
 Depends: gcc, g++, gfortran, cmake, bison, gawk, python3-dev, libxml2-dev, libedit-dev, swig, libffi-dev, binutils-dev, ncurses-dev
 Essential: no
 Maintainer: Srikanth Yalavarthi <syalavarthi@marvell.com>
-Description: Marvell's LLVM Toolchain for DISTRO_NAME DISTRO_VERSION. Includes LLVM, Clang, Flang, OpenMP and LLD
+Description: Marvell's GCC-ILP32M Toolchain for DISTRO_NAME DISTRO_VERSION.

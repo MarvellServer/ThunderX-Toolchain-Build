@@ -3,27 +3,36 @@
 # ubuntu Packaging                                                            #
 ###############################################################################
 
-FROM base_ubuntu_PLATFORM_VERSION as pkg_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_ubuntu_PLATFORM_VERSION
+FROM base_ubuntu_DISTRO_VERSION as pkg_TOOLCHAIN_NAME_ubuntu_DISTRO_VERSION
+
+# arg
+ARG DATESTRING=YYYYMMDD
 
 # env
 ENV INSTALL_PREFIX=/opt/TOOLCHAIN_NAME/TOOLCHAIN_VERSION
 
 # copy install dir
-COPY --from=build_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_ubuntu_PLATFORM_VERSION /opt/TOOLCHAIN_NAME /opt/TOOLCHAIN_NAME
+COPY --from=build_TOOLCHAIN_NAME_ubuntu_DISTRO_VERSION /opt/TOOLCHAIN_NAME /opt/TOOLCHAIN_NAME
 
 # Copy control file
 COPY data/control /tmp/
-RUN export TODAY=`date "+%Y%m%d"` && \
-    mkdir -p /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-ubuntu-PLATFORM_VERSION-${TODAY}_arm64/DEBIAN && \
-    mv /tmp/control /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-ubuntu-PLATFORM_VERSION-${TODAY}_arm64/DEBIAN
+RUN sed -i "s/DATESTRING/${DATESTRING}/g" /tmp/control
+RUN export ARCH=`dpkg --print-architecture` && \
+    mkdir -p /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}/DEBIAN && \
+    mv /tmp/control /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}/DEBIAN
 
 # create deb file
-RUN export TODAY=`date "+%Y%m%d"` && \
+RUN export ARCH=`dpkg --print-architecture` && \
     cd /tmp && \
-    mv -v /opt /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-ubuntu-PLATFORM_VERSION-${TODAY}_arm64/ && \
-    dpkg-deb --build TOOLCHAIN_NAME-TOOLCHAIN_VERSION-ubuntu-PLATFORM_VERSION-${TODAY}_arm64
+    mv -v /opt /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}/ && \
+    dpkg-deb --build TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}
+
+# clean-up the package
+RUN rm -rf /opt/TOOLCHAIN_NAME
 
 # install the deb file
-RUN export TODAY=`date "+%Y%m%d"` && \
-    cd /tmp && \
-    dpkg -i TOOLCHAIN_NAME-TOOLCHAIN_VERSION-ubuntu-PLATFORM_VERSION-${TODAY}_arm64.deb
+RUN export ARCH=`dpkg --print-architecture` && \
+    apt-get -y install /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}.deb
+
+# install additional packages
+RUN apt-get -y install xz-utils

@@ -4,14 +4,13 @@
 ###############################################################################
 
 # define base
-FROM base_PLATFORM_NAME_PLATFORM_VERSION as build_gcc_TOOLCHAIN_BRANCH_PLATFORM_NAME_PLATFORM_VERSION
+FROM base_DISTRO_NAME_DISTRO_VERSION as build_gcc-ilp32_DISTRO_NAME_DISTRO_VERSION
 
 # define env
 ENV NTHREADS=64
-ENV DIR_BASE=/tmp/gcc
+ENV DIR_BASE=/tmp/gcc-ilp32
 ENV DIR_SOURCE=${DIR_BASE}/source
 ENV DIR_BUILD=${DIR_BASE}/build
-ENV INSTALL_PREFIX=/opt/gcc/TOOLCHAIN_VERSION
 
 # create directories
 RUN mkdir -p ${DIR_BASE}
@@ -19,17 +18,20 @@ RUN mkdir -p ${DIR_SOURCE}
 RUN mkdir -p ${DIR_BUILD}
 
 # copy sources
-COPY --from=gcc_source /tmp/gcc/source/binutils-gdb                   /tmp/gcc/source/binutils-gdb
-COPY --from=gcc_source /tmp/gcc/source/ThunderX-ilp32-linux           /tmp/gcc/source/ThunderX-ilp32-linux
-COPY --from=gcc_source /tmp/gcc/source/ThunderX-Toolchain-glibc-ilp32 /tmp/gcc/source/ThunderX-Toolchain-glibc-ilp32
-COPY --from=gcc_source /tmp/gcc/source/ThunderX-Toolchain-gcc-ilp32   /tmp/gcc/source/ThunderX-Toolchain-gcc-ilp32
+COPY --from=gcc-ilp32_source ${DIR_SOURCE}/binutils-gdb                   ${DIR_SOURCE}/binutils-gdb
+COPY --from=gcc-ilp32_source ${DIR_SOURCE}/ThunderX-ilp32-linux           ${DIR_SOURCE}/ThunderX-ilp32-linux
+COPY --from=gcc-ilp32_source ${DIR_SOURCE}/ThunderX-Toolchain-glibc-ilp32 ${DIR_SOURCE}/ThunderX-Toolchain-glibc-ilp32
+COPY --from=gcc-ilp32_source ${DIR_SOURCE}/ThunderX-Toolchain-gcc-ilp32   ${DIR_SOURCE}/ThunderX-Toolchain-gcc-ilp32
 
-# define local vars
+# define build config
+ENV INSTALL_PREFIX=/opt/gcc-ilp32/TOOLCHAIN_VERSION
 ENV TARGET aarch64-linux-gnu
 ENV MULTILIB_CONF -with-multilib-list=lp64,ilp32
 ENV LIBMVEC_CONF --enable-mathvec
 ENV CONF --prefix=${INSTALL_PREFIX} --with-sysroot=${INSTALL_PREFIX} \
          --target=${TARGET} --host=${TARGET} --build=${TARGET}
+ENV GCC_CONF ${CONF} --enable-gnu-indirect-function \
+             --with-advance-toolchain=${INSTALL_PREFIX} ${MULTILIB_CONF}
 
 # update PATH
 ENV PATH ${INSTALL_PREFIX}/bin:${INSTALL_PREFIX}/usr/bin:${PATH}
@@ -57,8 +59,6 @@ RUN cd ${DIR_BUILD} && \
 
 # configure, build and install : ThunderX-Toolchain-gcc-ilp32 / init
 ENV BUILD_COMP=ThunderX-Toolchain-gcc-ilp32
-ENV GCC_CONF ${CONF} --enable-gnu-indirect-function \
-             --with-advance-toolchain=${INSTALL_PREFIX} ${MULTILIB_CONF}
 ENV INIT_GCC_CONF --with-newlib --without-headers \
                   --enable-languages=c --enable-threads=no \
                   --disable-shared --disable-decimal-float \
@@ -127,4 +127,4 @@ RUN cd ${DIR_BUILD} && \
     cd ${BUILD_COMP}-final && \
     ${DIR_SOURCE}/${BUILD_COMP}/configure ${GCC_CONF} ${FINAL_GCC_CONF} && \
     make -Otarget -j${NTHREADS} all | tee ${BUILD_COMP}-final-build.log && \
-    make -Otarget DESTDIR=${INSTALL_PREFIX} install | tee ${BUILD_COMP}-final-install.log
+    make -Otarget install | tee ${BUILD_COMP}-final-install.log

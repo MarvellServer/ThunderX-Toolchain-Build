@@ -3,13 +3,13 @@
 # GCC Source                                                                  #
 ###############################################################################
 
-FROM centos:8.1.1911 as gcc_source
+FROM centos:8.1.1911 as gcc-ilp32_source
 
 # install pre-requisites
 RUN dnf -y install git
 
 # define env
-ENV DIR_BASE=/tmp/gcc
+ENV DIR_BASE=/tmp/gcc-ilp32
 ENV DIR_SOURCE=${DIR_BASE}/source
 
 # set up ssh keys
@@ -54,7 +54,7 @@ RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-glibc-ilp32 && \
 # update and checkout : ThunderX-Toolchain-gcc-ilp32
 RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-gcc-ilp32 && \
     git pull && \
-    git checkout TOOLCHAIN_BRANCH
+    git checkout GCC_BRANCH
 
 # install bzip2
 RUN dnf -y install bzip2 wget

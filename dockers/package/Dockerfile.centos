@@ -3,7 +3,11 @@
 # CentOS Packaging                                                            #
 ###############################################################################
 
-FROM base_centos_PLATFORM_VERSION as pkg_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_centos_PLATFORM_VERSION
+
+FROM base_centos_DISTRO_VERSION as pkg_TOOLCHAIN_NAME_centos_DISTRO_VERSION
+
+# arg
+ARG DATESTRING=YYYYMMDD
 
 # env
 ENV INSTALL_PREFIX=/opt/TOOLCHAIN_NAME/TOOLCHAIN_VERSION
@@ -12,7 +16,7 @@ ENV INSTALL_PREFIX=/opt/TOOLCHAIN_NAME/TOOLCHAIN_VERSION
 RUN dnf -y install rpm-build rpmdevtools
 
 # copy install dir
-COPY --from=build_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_centos_PLATFORM_VERSION /opt/TOOLCHAIN_NAME /opt/TOOLCHAIN_NAME
+COPY --from=build_TOOLCHAIN_NAME_centos_DISTRO_VERSION /opt/TOOLCHAIN_NAME /opt/TOOLCHAIN_NAME
 
 # create tar file
 RUN cd /tmp && \
@@ -20,7 +24,16 @@ RUN cd /tmp && \
 
 # get spec file
 COPY data/TOOLCHAIN_NAME.spec /tmp/TOOLCHAIN_NAME.spec
+RUN sed -i "s/DATESTRING/${DATESTRING}/g" /tmp/TOOLCHAIN_NAME.spec
 
 # build RPMS
 RUN cd /tmp && \
     rpmbuild --target aarch64 -bb ./TOOLCHAIN_NAME.spec
+
+# clean-up the package
+RUN rm -rf /opt/TOOLCHAIN_NAME
+
+# install the toolchain
+RUN export PLATFORM_ID=`grep PLATFORM_ID /etc/os-release | cut -d ":" -f 2- | tr -d '"'` && \
+    export ARCH=`uname -m` && \
+    dnf -y install /root/rpmbuild/RPMS/aarch64/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}.${PLATFORM_ID}.${ARCH}.rpm

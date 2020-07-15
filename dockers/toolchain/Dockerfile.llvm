@@ -4,14 +4,13 @@
 ###############################################################################
 
 # define base
-FROM base_PLATFORM_NAME_PLATFORM_VERSION as build_llvm_TOOLCHAIN_BRANCH_PLATFORM_NAME_PLATFORM_VERSION
+FROM base_DISTRO_NAME_DISTRO_VERSION as build_llvm_DISTRO_NAME_DISTRO_VERSION
 
 # define env
 ENV NTHREADS=64
 ENV DIR_BASE=/tmp/llvm
 ENV DIR_SOURCE=${DIR_BASE}/source
 ENV DIR_BUILD=${DIR_BASE}/build
-ENV INSTALL_PREFIX=/opt/llvm/TOOLCHAIN_VERSION
 
 # create directories
 RUN mkdir -p ${DIR_BASE}
@@ -19,12 +18,15 @@ RUN mkdir -p ${DIR_SOURCE}
 RUN mkdir -p ${DIR_BUILD}
 
 # copy sources
-COPY --from=llvm_source /tmp/llvm/source/ThunderX-Toolchain-CT-LLVM-9 /tmp/llvm/source/ThunderX-Toolchain-CT-LLVM-9
-COPY --from=llvm_source /tmp/llvm/source/llvm-project/clang           /tmp/llvm/source/clang
-COPY --from=llvm_source /tmp/llvm/source/llvm-project/lld             /tmp/llvm/source/lld
-COPY --from=llvm_source /tmp/llvm/source/llvm-project/openmp          /tmp/llvm/source/openmp
-COPY --from=llvm_source /tmp/llvm/source/ThunderX-Toolchain-CT-FLANG  /tmp/llvm/source/ThunderX-Toolchain-CT-FLANG
-COPY --from=llvm_source /tmp/llvm/source/flang-driver                 /tmp/llvm/source/flang-driver
+COPY --from=llvm_source ${DIR_SOURCE}/ThunderX-Toolchain-CT-LLVM-9 ${DIR_SOURCE}/ThunderX-Toolchain-CT-LLVM-9
+COPY --from=llvm_source ${DIR_SOURCE}/llvm-project/clang           ${DIR_SOURCE}/clang
+COPY --from=llvm_source ${DIR_SOURCE}/llvm-project/lld             ${DIR_SOURCE}/lld
+COPY --from=llvm_source ${DIR_SOURCE}/llvm-project/openmp          ${DIR_SOURCE}/openmp
+COPY --from=llvm_source ${DIR_SOURCE}/ThunderX-Toolchain-CT-FLANG  ${DIR_SOURCE}/ThunderX-Toolchain-CT-FLANG
+COPY --from=llvm_source ${DIR_SOURCE}/flang-driver                 ${DIR_SOURCE}/flang-driver
+
+# define build config
+ENV INSTALL_PREFIX=/opt/llvm/TOOLCHAIN_VERSION
 
 # configure, build and install : ThunderX-Toolchain-CT-LLVM-9
 RUN cd ${DIR_BUILD} && \

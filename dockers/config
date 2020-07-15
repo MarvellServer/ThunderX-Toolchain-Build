@@ -1,5 +1,8 @@
-toolchain_name=gcc
-toolchain_version=10.0.0
-toolchain_branch=struct_opt
-platform_name=ubuntu
-platform_version=20.04
+DISTRO_NAME=centos
+DISTRO_VERSION=8.1.1911
+TOOLCHAIN_NAME=gcc-ilp32
+TOOLCHAIN_VERSION=10.0.1
+GCC_BRANCH=struct_opt
+LLVM_BRANCH=ctt_latest_release
+FLANG_BRANCH=ctt_latest_release
+APP=spec

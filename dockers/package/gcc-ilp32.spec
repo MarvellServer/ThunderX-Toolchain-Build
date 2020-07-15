@@ -1,15 +1,12 @@
 
-# define date
-%define build_timestamp %(date +"%Y%m%d")
-
 Name:       gcc-ilp32
-Version:    10.0.0
-Release:    %{build_timestamp}%{?dist}
-Summary:    Marvell's Release of gcc ilp32 1.0
+Version:    TOOLCHAIN_VERSION
+Release:    DATESTRING%{?dist}
+Summary:    Marvell's Release of GCC-ILP32 TOOLCHAIN_VERSION
 BuildArch:  aarch64
 License:    GNU GPL 3.0
 URL:        https://github.com/MarvellServer/ThunderX-Toolchain-gcc-ilp32.git
-Source0:    /tmp/gcc-%{version}.tar.gz
+Source0:    /tmp/%{name}-%{version}.tar.gz
 
 Requires:   gcc, libgcc, python3-devel, binutils-devel, ncurses-devel 
 
@@ -17,14 +14,10 @@ Requires:   gcc, libgcc, python3-devel, binutils-devel, ncurses-devel
 %define debug_package %{nil}
 
 %description
-gcc tot ilp32 build for TXOS
+GNU Compiler Collection, ILP32 Release
 
 %prep
-#tar -xzvf /tmp/%{name}-%{version}.tar.gz -C ${RPM_SOURCE_DIR}/
-tar -xzvf /tmp/gcc-%{version}.tar.gz -C ${RPM_SOURCE_DIR}/
-
-%build
-#nothing required
+tar -xzvf /tmp/%{name}-%{version}.tar.gz -C ${RPM_SOURCE_DIR}/
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -35,6 +28,8 @@ cp -a $RPM_SOURCE_DIR/opt $RPM_BUILD_ROOT/
 /opt
 
 %changelog
+* Tue Jul 14 2020 Srikanth Yalavarthi <syalavarthi@marvell.com>
+- converted as generic template
+
 * Tue Jun 9 2020 Wei Zhao <wxz@marvell.com>
 - First release of marvell gcc ilp32 RPM
-

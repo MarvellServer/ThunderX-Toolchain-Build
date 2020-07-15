@@ -39,7 +39,7 @@ RUN cd ${DIR_SOURCE} && \
 # update and checkout : ThunderX-Toolchain-CT-LLVM-9
 RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-CT-LLVM-9 && \
     git pull origin && \
-    git checkout TOOLCHAIN_BRANCH
+    git checkout LLVM_BRANCH
 
 # update and checkout : llvm-project
 RUN cd ${DIR_SOURCE}/llvm-project && \
@@ -54,4 +54,4 @@ RUN cd ${DIR_SOURCE}/flang-driver && \
 # update and checkout : ThunderX-Toolchain-CT-FLANG
 RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-CT-FLANG && \
     git pull origin && \
-    git checkout TOOLCHAIN_BRANCH
+    git checkout FLANG_BRANCH

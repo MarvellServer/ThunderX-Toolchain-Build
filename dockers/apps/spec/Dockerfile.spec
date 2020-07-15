@@ -3,19 +3,10 @@
 # SPEC CPU2017                                                                 #
 ###############################################################################
 
-FROM base_centos_PLATFORM_VERSION as spec_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_centos_PLATFORM_VERSION
-
-# define DATESTRING
-ARG DATESTRING=YYYYMMDD
+FROM pkg_TOOLCHAIN_NAME_DISTRO_NAME_DISTRO_VERSION as spec_TOOLCHAIN_NAME_DISTRO_NAME_DISTRO_VERSION
 
 # env
 ENV INSTALL_PREFIX=/opt/TOOLCHAIN_NAME/TOOLCHAIN_VERSION
-
-# copy toolchain rpm
-COPY --from=pkg_TOOLCHAIN_NAME_TOOLCHAIN_BRANCH_centos_PLATFORM_VERSION /root/rpmbuild/RPMS/aarch64/TOOLCHAIN_NAME-ilp32-TOOLCHAIN_VERSION-${DATESTRING}.el8.aarch64.rpm /tmp/TOOLCHAIN_NAME-ilp32-TOOLCHAIN_VERSION-${DATESTRING}.el8.aarch64.rpm
-
-# install RPM
-RUN dnf -y install /tmp/TOOLCHAIN_NAME-ilp32-TOOLCHAIN_VERSION-${DATESTRING}.el8.aarch64.rpm
 
 # update paths
 ENV PATH=${INSTALL_PREFIX}/bin:/usr/local/bin:${PATH}

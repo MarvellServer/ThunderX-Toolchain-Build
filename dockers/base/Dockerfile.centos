@@ -3,7 +3,7 @@
 # CentOS Base                                                                 #
 ###############################################################################
 
-FROM centos:PLATFORM_VERSION as base_centos_PLATFORM_VERSION
+FROM centos:DISTRO_VERSION as base_centos_DISTRO_VERSION
 
 # install dnf plugins and enable epel repo
 RUN dnf -y install dnf-plugins-core epel-release
