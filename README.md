@@ -29,14 +29,20 @@ The "master" branch contains dockerfiles and scripts used to build LLVM and GCC-
 
 **Source Code for GCC-ILP32 Toolchain**
 GCC-ILP32 : https://github.com/MarvellServer/ThunderX-Toolchain-gcc-ilp32
+
 GLIBC-ILP32: https://github.com/MarvellServer/ThunderX-Toolchain-glibc-ilp32
+
 LINUX KERNEL: https://github.com/MarvellServer/ThunderX-ilp32-linux
+
 BINUTILS: http://sourceware.org/git/binutils-gdb.git
 
 **Source Code for LLVM Toolchain**
 LLVM : https://github.com/MarvellServer/ThunderX-Toolchain-CT-LLVM-9
+
 FLANG: https://github.com/MarvellServer/ThunderX-Toolchain-CT-FLANG
+
 OpenMP, PGMATH, LLDB : https://github.com/llvm/llvm-project.git
+
 FLANG-DRIVER: https://github.com/flang-compiler/flang-driver.git
 
 **Build:**
