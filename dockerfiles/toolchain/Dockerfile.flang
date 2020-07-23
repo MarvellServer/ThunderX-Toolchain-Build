@@ -1,14 +1,14 @@
 
 ###############################################################################
-# LLVM Build                                                                 #
+# FLANG Build                                                                #
 ###############################################################################
 
 # define base
-FROM base_DISTRO_NAME_DISTRO_VERSION as build_llvm_DISTRO_NAME_DISTRO_VERSION
+FROM base_DISTRO_NAME_DISTRO_VERSION as build_flang_DISTRO_NAME_DISTRO_VERSION
 
 # define env
 ENV NTHREADS=64
-ENV DIR_BASE=/tmp/llvm
+ENV DIR_BASE=/tmp/flang
 ENV DIR_SOURCE=${DIR_BASE}/source
 ENV DIR_BUILD=${DIR_BASE}/build
 
@@ -18,15 +18,15 @@ RUN mkdir -p ${DIR_SOURCE}
 RUN mkdir -p ${DIR_BUILD}
 
 # copy sources
-COPY --from=llvm_source ${DIR_SOURCE}/ThunderX-Toolchain-CT-LLVM-9 ${DIR_SOURCE}/ThunderX-Toolchain-CT-LLVM-9
-COPY --from=llvm_source ${DIR_SOURCE}/llvm-project/clang           ${DIR_SOURCE}/clang
-COPY --from=llvm_source ${DIR_SOURCE}/llvm-project/lld             ${DIR_SOURCE}/lld
-COPY --from=llvm_source ${DIR_SOURCE}/llvm-project/openmp          ${DIR_SOURCE}/openmp
-COPY --from=llvm_source ${DIR_SOURCE}/ThunderX-Toolchain-CT-FLANG  ${DIR_SOURCE}/ThunderX-Toolchain-CT-FLANG
-COPY --from=llvm_source ${DIR_SOURCE}/flang-driver                 ${DIR_SOURCE}/flang-driver
+COPY --from=flang_source ${DIR_SOURCE}/ThunderX-Toolchain-CT-LLVM-9 ${DIR_SOURCE}/ThunderX-Toolchain-CT-LLVM-9
+COPY --from=flang_source ${DIR_SOURCE}/llvm-project/clang           ${DIR_SOURCE}/clang
+COPY --from=flang_source ${DIR_SOURCE}/llvm-project/lld             ${DIR_SOURCE}/lld
+COPY --from=flang_source ${DIR_SOURCE}/llvm-project/openmp          ${DIR_SOURCE}/openmp
+COPY --from=flang_source ${DIR_SOURCE}/ThunderX-Toolchain-CT-FLANG  ${DIR_SOURCE}/ThunderX-Toolchain-CT-FLANG
+COPY --from=flang_source ${DIR_SOURCE}/flang-driver                 ${DIR_SOURCE}/flang-driver
 
 # define build config
-ENV INSTALL_PREFIX=/opt/llvm/TOOLCHAIN_VERSION
+ENV INSTALL_PREFIX=/opt/flang/TOOLCHAIN_VERSION
 
 # configure, build and install : ThunderX-Toolchain-CT-LLVM-9
 RUN cd ${DIR_BUILD} && \
@@ -41,8 +41,8 @@ RUN cd ${DIR_BUILD} && \
               -DCMAKE_CXX_COMPILER=g++ \
               -DCMAKE_C_FLAGS="-w -fpermissive" \
               -DCMAKE_CXX_FLAGS="-w -fpermissive" && \
-    make -j${NTHREADS} | tee llvm-build.log && \
-    make install | tee llvm-install.log
+    make -j${NTHREADS} | tee ThunderX-Toolchain-CT-LLVM-9-build.log && \
+    make install | tee ThunderX-Toolchain-CT-LLVM-9-install.log
 
 # update environment
 ENV LDFLAGS="-Wl,-rpath=${INSTALL_PREFIX}/lib -Wl,-rpath-link=${INSTALL_PREFIX}/lib ${LDFLAGS}"
@@ -95,5 +95,5 @@ RUN cd ${BUILD_DIR} && \
               -DCMAKE_Fortran_FLAGS="-w ${LDFLAGS}" \
               -DFLANG_LLVM_EXTENSIONS=ON \
               -DGCC_INSTALL_PREFIX=/usr && \
-     make -j${NTHREADS} | tee flang-build.log && \
-     make -j${NTHREADS} install | tee flang-install.log
+     make -j${NTHREADS} | tee ThunderX-Toolchain-CT-FLANG-build.log && \
+     make -j${NTHREADS} install | tee ThunderX-Toolchain-CT-FLANG-install.log
