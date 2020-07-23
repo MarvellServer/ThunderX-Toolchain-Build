@@ -1,9 +1,9 @@
-Package: llvm
-Version: 10.0.1-DATESTRING-ubuntu-20.04
+Package: flang
+Version: 9.0.0-DATESTRING-ubuntu-18.04
 Section: custom
 Priority: optional
 Architecture: arm64
 Depends: gcc, g++, gfortran, cmake, bison, gawk, python3-dev, libxml2-dev, libedit-dev, swig, libffi-dev, binutils-dev, ncurses-dev
 Essential: no
 Maintainer: Srikanth Yalavarthi <syalavarthi@marvell.com>
-Description: LLVM Toolchain Upstream Release with Clang
+Description: Marvell's LLVM Toolchain for ubuntu 18.04. Includes LLVM, Clang, Flang, OpenMP and LLD

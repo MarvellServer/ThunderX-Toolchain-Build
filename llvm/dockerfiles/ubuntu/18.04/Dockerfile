@@ -33,7 +33,7 @@ RUN cd ${DIR_SOURCE}/llvm-project && \
 # Ubuntu Base                                                                 #
 ###############################################################################
 
-FROM ubuntu:20.04 as base_ubuntu_20.04
+FROM ubuntu:18.04 as base_ubuntu_18.04
 
 # install development packages
 RUN apt-get update -y
@@ -91,7 +91,7 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
 ###############################################################################
 
 # define base
-FROM base_ubuntu_20.04 as build_llvm_ubuntu_20.04
+FROM base_ubuntu_18.04 as build_llvm_ubuntu_18.04
 
 # define env
 ENV NTHREADS=64
@@ -150,7 +150,7 @@ RUN cd ${DIR_BUILD} && \
 # ubuntu Packaging                                                            #
 ###############################################################################
 
-FROM base_ubuntu_20.04 as pkg_llvm_ubuntu_20.04
+FROM base_ubuntu_18.04 as pkg_llvm_ubuntu_18.04
 
 # arg
 ARG DATESTRING=YYYYMMDD
@@ -159,27 +159,27 @@ ARG DATESTRING=YYYYMMDD
 ENV INSTALL_PREFIX=/opt/llvm/10.0.1
 
 # copy install dir
-COPY --from=build_llvm_ubuntu_20.04 /opt/llvm /opt/llvm
+COPY --from=build_llvm_ubuntu_18.04 /opt/llvm /opt/llvm
 
 # Copy control file
 COPY data/control /tmp/
 RUN sed -i "s/DATESTRING/${DATESTRING}/g" /tmp/control
 RUN export ARCH=`dpkg --print-architecture` && \
-    mkdir -p /tmp/llvm-10.0.1-${DATESTRING}-ubuntu-20.04_${ARCH}/DEBIAN && \
-    mv /tmp/control /tmp/llvm-10.0.1-${DATESTRING}-ubuntu-20.04_${ARCH}/DEBIAN
+    mkdir -p /tmp/llvm-10.0.1-${DATESTRING}-ubuntu-18.04_${ARCH}/DEBIAN && \
+    mv /tmp/control /tmp/llvm-10.0.1-${DATESTRING}-ubuntu-18.04_${ARCH}/DEBIAN
 
 # create deb file
 RUN export ARCH=`dpkg --print-architecture` && \
     cd /tmp && \
-    mv -v /opt /tmp/llvm-10.0.1-${DATESTRING}-ubuntu-20.04_${ARCH}/ && \
-    dpkg-deb --build llvm-10.0.1-${DATESTRING}-ubuntu-20.04_${ARCH}
+    mv -v /opt /tmp/llvm-10.0.1-${DATESTRING}-ubuntu-18.04_${ARCH}/ && \
+    dpkg-deb --build llvm-10.0.1-${DATESTRING}-ubuntu-18.04_${ARCH}
 
 # clean-up the package
 RUN rm -rf /opt/llvm
 
 # install the deb file
 RUN export ARCH=`dpkg --print-architecture` && \
-    apt-get -y install /tmp/llvm-10.0.1-${DATESTRING}-ubuntu-20.04_${ARCH}.deb
+    apt-get -y install /tmp/llvm-10.0.1-${DATESTRING}-ubuntu-18.04_${ARCH}.deb
 
 # install additional packages
 RUN apt-get -y install xz-utils
@@ -188,7 +188,7 @@ RUN apt-get -y install xz-utils
 # SPEC CPU2017                                                                 #
 ###############################################################################
 
-FROM pkg_llvm_ubuntu_20.04 as spec_llvm_ubuntu_20.04
+FROM pkg_llvm_ubuntu_18.04 as spec_llvm_ubuntu_18.04
 
 # env
 ENV INSTALL_PREFIX=/opt/llvm/10.0.1

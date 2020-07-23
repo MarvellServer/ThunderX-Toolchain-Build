@@ -1,5 +1,5 @@
 Package: llvm
-Version: 10.0.1-DATESTRING-ubuntu-20.04
+Version: 10.0.1-DATESTRING-ubuntu-18.04
 Section: custom
 Priority: optional
 Architecture: arm64
