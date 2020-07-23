@@ -1,0 +1,30 @@
+
+###############################################################################
+# LLVM Source                                                                 #
+###############################################################################
+
+FROM centos:8.1.1911 as llvm_source
+
+# install pre-requisites
+RUN dnf -y install git
+
+# define env
+ENV DIR_BASE=/tmp/llvm
+ENV DIR_SOURCE=${DIR_BASE}/source
+
+# set up ssh keys
+COPY data/github_rsa /root/.ssh/
+COPY data/config /root/.ssh/
+
+# create dirs
+RUN mkdir -p ${DIR_BASE}
+RUN mkdir -p ${DIR_SOURCE}
+
+# clone repos : llvm-project
+RUN cd ${DIR_SOURCE} && \
+    git clone https://github.com/llvm/llvm-project.git
+
+# update and checkout : llvm-project
+RUN cd ${DIR_SOURCE}/llvm-project && \
+    git pull origin && \
+    git checkout LLVM_BRANCH

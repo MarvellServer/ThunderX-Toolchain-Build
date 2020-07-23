@@ -1,0 +1,60 @@
+
+###############################################################################
+# LLVM Build                                                                  #
+###############################################################################
+
+# define base
+FROM base_DISTRO_NAME_DISTRO_VERSION as build_llvm_DISTRO_NAME_DISTRO_VERSION
+
+# define env
+ENV NTHREADS=64
+ENV DIR_BASE=/tmp/llvm
+ENV DIR_SOURCE=${DIR_BASE}/source
+ENV DIR_BUILD=${DIR_BASE}/build
+
+# create directories
+RUN mkdir -p ${DIR_BASE}
+RUN mkdir -p ${DIR_SOURCE}
+RUN mkdir -p ${DIR_BUILD}
+
+# copy sources
+COPY --from=llvm_source ${DIR_SOURCE}/llvm-project ${DIR_SOURCE}/llvm-project
+
+# define build config
+ENV INSTALL_PREFIX=/opt/llvm/TOOLCHAIN_VERSION
+ENV GCC_INSTALL_PREFIX=/usr
+
+# configure, build and install : llvm-project
+RUN cd ${DIR_BUILD} && \
+    mkdir -p llvm-project && \
+    cd llvm-project && \
+    cmake -G "Unix Makefiles" \
+          -DLLVM_ENABLE_PROJECTS=clang \
+          -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DLLVM_TARGETS_TO_BUILD=AArch64 \
+#         -DLLVM_HOST_TRIPLE=${TRIPLET_HOST} \
+#         -DLLVM_DEFAULT_TARGET_TRIPLE=${TRIPLET_TARGET} \
+          -DCMAKE_C_COMPILER=${GCC_INSTALL_PREFIX}/bin/gcc \
+          -DCMAKE_CXX_COMPILER=${GCC_INSTALL_PREFIX}/bin/g++ \
+          -DCMAKE_C_FLAGS='-w -fpermissive' \
+          -DCMAKE_CXX_FLAGS="-w -fpermissive" \
+#         -DCMAKE_CXX_STANDARD=17 \
+#         -DCLANG_BUILD_EXAMPLES=ON \
+#         -DCLANG_BUILD_TOOLS=ON \
+#         -DLLVM_BUILD_DOCS=ON \
+#         -DLLVM_BUILD_EXAMPLES=ON \
+#         -DLLVM_INSTALL_BINUTILS_SYMLINKS=ON \
+#         -DLLVM_INSTALL_CCTOOLS_SYMLINKS=ON \
+#         -DLLVM_INSTALL_UTILS=ON \
+#         -DENABLE_LINKER_BUILD_ID=ON \
+#         -DLIBCLANG_BUILD_STATIC=ON \
+#         -DLLVM_BUILD_LLVM_DYLIB=ON \
+#         -DLLVM_ENABLE_FFI=ON \
+#         -DLLVM_ENABLE_EH=ON \
+#         -DLLVM_ENABLE_RTTI=ON \
+#         -DLLVM_ENABLE_ASSERTIONS=ON \
+          -DGCC_INSTALL_PREFIX=${GCC_INSTALL_PREFIX} \
+          ${DIR_SOURCE}/llvm-project/llvm && \
+    make -j${NTHREADS} | tee llvm-project-build.log && \
+    make install | tee llvm-project-install.log

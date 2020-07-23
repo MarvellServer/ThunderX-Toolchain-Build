@@ -22,6 +22,13 @@ then
       echo "TOOLCHAIN_VERSION / GCC_BRANCH Not Defined"
       exit
     fi
+  elif [ "${TOOLCHAIN_NAME}" == "llvm" ]
+  then
+    if [ -z "${LLVM_BRANCH}" ] || [ -z "${TOOLCHAIN_VERSION}" ]
+    then
+      echo "TOOLCHAIN_VERSION / LLVM_BRANCH Not Defined"
+      exit
+    fi
   elif [ "${TOOLCHAIN_NAME}" == "flang" ]
   then
     if [ -z "${FLANG_BRANCH}" ] || [ -z "${TOOLCHAIN_VERSION}" ]
@@ -73,6 +80,12 @@ then
 
   # update the template
   sed -i "s/GCC_BRANCH/${GCC_BRANCH}/g"   ${BUILD_DIR}/Dockerfile
+
+elif [ "${TOOLCHAIN_NAME}" == "llvm" ]
+then
+
+  # update the template
+  sed -i "s/LLVM_BRANCH/${LLVM_BRANCH}/g"   ${BUILD_DIR}/Dockerfile
 
 elif [ "${TOOLCHAIN_NAME}" == "flang" ]
 then
