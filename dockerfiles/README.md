@@ -57,3 +57,14 @@ Tested Builds:
  - GCC-ILP32: Ubuntu 20.04, Ubuntu 18.04, CentOS 8.1.1911
  - LLVM: Ubuntu 20.04, Ubuntu 18.04, CentOS 8.1.1911
  - FLANG: Ubuntu 20.04, Ubuntu 18.04, CentOS 8.1.1911
+ 
+ 
+**ssh_config**
+
+
+    user@localhost:~/ThunderX-Toolchain-Build/dockerfiles$ cat extras/ssh_config
+    Host github.com
+        HostName github.com
+        User user
+        IdentityFile ~/.ssh/github_rsa
+        StrictHostKeyChecking=no
