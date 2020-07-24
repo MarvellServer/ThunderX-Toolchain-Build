@@ -65,9 +65,7 @@ FLANG-DRIVER: https://github.com/flang-compiler/flang-driver.git
 
 **Build:**
 
-Docker images can build using the specific dockerfiles with 
-
-    docker build -t <toolchain>:<tag> ./
+Docker images can build using the specific dockerfiles with  build.sh
 
 Additional files needed to checkout the git repositories like "github_rsa", "ssh_config" and application specific files should be placed in data folder. These files are not part of the repository.
 

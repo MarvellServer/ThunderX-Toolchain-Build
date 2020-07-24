@@ -13,8 +13,8 @@ ENV DIR_BASE=/tmp/llvm
 ENV DIR_SOURCE=${DIR_BASE}/source
 
 # set up ssh keys
-COPY data/github_rsa /root/.ssh/
-COPY data/config /root/.ssh/
+COPY data/github_rsa /root/.ssh/github_rsa
+COPY data/ssh_config /root/.ssh/config
 
 # create dirs
 RUN mkdir -p ${DIR_BASE}
