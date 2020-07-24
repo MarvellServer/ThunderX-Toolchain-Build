@@ -48,7 +48,7 @@ RUN cd ${DIR_BUILD} && \
 ENV LDFLAGS="-Wl,-rpath=${INSTALL_PREFIX}/lib -Wl,-rpath-link=${INSTALL_PREFIX}/lib ${LDFLAGS}"
 
 # configure, build and install : libpgmath
-RUN cd ${BUILD_DIR} && \
+RUN cd ${DIR_BUILD} && \
     mkdir libpgmath && \
     cd  libpgmath && \
     cmake ${DIR_SOURCE}/ThunderX-Toolchain-CT-FLANG/runtime/libpgmath \
@@ -62,7 +62,7 @@ RUN cd ${BUILD_DIR} && \
     make -j${NTHREADS} install | tee libpgmath-install.log
 
 # configure, build and install : flang-driver
-RUN cd ${BUILD_DIR} && \
+RUN cd ${DIR_BUILD} && \
     mkdir flang-driver && \
     cd flang-driver && \
     cmake ${DIR_SOURCE}/flang-driver \
@@ -79,7 +79,7 @@ RUN cd ${BUILD_DIR} && \
     make -j${NTHREADS} install | tee flang-driver-install.log
 
 # configure, build and install : flang
-RUN cd ${BUILD_DIR} && \
+RUN cd ${DIR_BUILD} && \
     mkdir ThunderX-Toolchain-CT-FLANG && \
     cd ThunderX-Toolchain-CT-FLANG && \
     cmake ${DIR_SOURCE}/ThunderX-Toolchain-CT-FLANG \

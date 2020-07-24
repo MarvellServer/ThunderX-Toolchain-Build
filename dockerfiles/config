@@ -5,4 +5,5 @@ TOOLCHAIN_VERSION=10.0.1
 GCC_BRANCH=relGCC10-struct_opt-vec_int_cost
 LLVM_BRANCH=llvmorg-10.0.1
 FLANG_BRANCH=ctt_latest_release
+PACKAGE_NAME=clang
 APP=spec

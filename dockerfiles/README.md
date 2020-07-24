@@ -38,11 +38,13 @@ DISTRO_NAME: centos/ubuntu
 
 DISTRO_VERSION: OS version string
 
-GCC_BRANCH (Only for GCC build)
+GCC_BRANCH : GCC Git Branch to be built (Only for GCC build)
 
-LLVM_BRANCH (Only for LLVM build)
+LLVM_BRANCH : LLVM Git Branch to be built (Only for LLVM build)
 
-FLANG_BRANCH (Only for FLANG build)
+FLANG_BRANCH : FLANG Git Branch to be built (Only for FLANG build)
+
+PACKAGE_NAME : Name of the (deb/rpm) to be created (Optional). Defaults to TOOLCHAIN_NAME if not defined
 
 APP : Application to be built
 

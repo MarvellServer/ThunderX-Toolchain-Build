@@ -20,7 +20,7 @@ COPY --from=build_TOOLCHAIN_NAME_centos_DISTRO_VERSION /opt/TOOLCHAIN_NAME /opt/
 
 # create tar file
 RUN cd /tmp && \
-    tar -czvf /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION.tar.gz ${INSTALL_PREFIX}
+    tar -czvf /tmp/PACKAGE_NAME-TOOLCHAIN_VERSION.tar.gz ${INSTALL_PREFIX}
 
 # get spec file
 COPY data/TOOLCHAIN_NAME.spec /tmp/TOOLCHAIN_NAME.spec
@@ -36,4 +36,4 @@ RUN rm -rf /opt/TOOLCHAIN_NAME
 # install the toolchain
 RUN export PLATFORM_ID=$(grep PLATFORM_ID /etc/os-release | tr -s -c [:alnum:] _ | cut -d '_' -f 4-4) && \
     export ARCH=`uname -m` && \
-    dnf -y install /root/rpmbuild/RPMS/aarch64/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}.${PLATFORM_ID}.${ARCH}.rpm
+    dnf -y install /root/rpmbuild/RPMS/aarch64/PACKAGE_NAME-TOOLCHAIN_VERSION-${DATESTRING}.${PLATFORM_ID}.${ARCH}.rpm

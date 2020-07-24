@@ -18,21 +18,21 @@ COPY --from=build_TOOLCHAIN_NAME_ubuntu_DISTRO_VERSION /opt/TOOLCHAIN_NAME /opt/
 COPY data/control /tmp/
 RUN sed -i "s/DATESTRING/${DATESTRING}/g" /tmp/control
 RUN export ARCH=`dpkg --print-architecture` && \
-    mkdir -p /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}/DEBIAN && \
-    mv /tmp/control /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}/DEBIAN
+    mkdir -p /tmp/PACKAGE_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}/DEBIAN && \
+    mv /tmp/control /tmp/PACKAGE_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}/DEBIAN
 
 # create deb file
 RUN export ARCH=`dpkg --print-architecture` && \
     cd /tmp && \
-    mv -v /opt /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}/ && \
-    dpkg-deb --build TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}
+    mv -v /opt /tmp/PACKAGE_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}/ && \
+    dpkg-deb --build PACKAGE_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}
 
 # clean-up the package
 RUN rm -rf /opt/TOOLCHAIN_NAME
 
 # install the deb file
 RUN export ARCH=`dpkg --print-architecture` && \
-    apt-get -y install /tmp/TOOLCHAIN_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}.deb
+    apt-get -y install /tmp/PACKAGE_NAME-TOOLCHAIN_VERSION-${DATESTRING}-ubuntu-DISTRO_VERSION_${ARCH}.deb
 
 # install additional packages
 RUN apt-get -y install xz-utils

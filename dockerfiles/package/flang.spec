@@ -1,5 +1,5 @@
 
-Name:       flang
+Name:       PACKAGE_NAME
 Version:    TOOLCHAIN_VERSION
 Release:    DATESTRING%{?dist}
 Summary:    Marvell's Release of LLVM TOOLCHAIN_VERSION

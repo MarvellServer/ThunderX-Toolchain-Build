@@ -1,5 +1,5 @@
 
-Name:       llvm
+Name:       PACKAGE_NAME
 Version:    TOOLCHAIN_VERSION
 Release:    DATESTRING%{?dist}
 Summary:    LLVM Upstream Release

@@ -1,5 +1,5 @@
 
-Name:       gcc-ilp32
+Name:       PACKAGE_NAME
 Version:    TOOLCHAIN_VERSION
 Release:    DATESTRING%{?dist}
 Summary:    Marvell's Release of GCC-ILP32 TOOLCHAIN_VERSION

@@ -45,6 +45,12 @@ else
   exit
 fi
 
+# set default package name
+if [ -z "${PACKAGE_NAME}" ]
+then
+  PACKAGE_NAME=${TOOLCHAIN_NAME}
+fi
+
 # create build directory
 BUILD_DIR=${BASE_DIR}/build/${TOOLCHAIN_NAME}/${DISTRO_NAME}/${DISTRO_VERSION}
 mkdir -p ${BUILD_DIR}
@@ -73,6 +79,7 @@ sed -i "s/DISTRO_NAME/${DISTRO_NAME}/g"             ${BUILD_DIR}/Dockerfile
 sed -i "s/DISTRO_VERSION/${DISTRO_VERSION}/g"       ${BUILD_DIR}/Dockerfile
 sed -i "s/TOOLCHAIN_NAME/${TOOLCHAIN_NAME}/g"       ${BUILD_DIR}/Dockerfile
 sed -i "s/TOOLCHAIN_VERSION/${TOOLCHAIN_VERSION}/g" ${BUILD_DIR}/Dockerfile
+sed -i "s/PACKAGE_NAME/${PACKAGE_NAME}/g"           ${BUILD_DIR}/Dockerfile
 
 # update template files
 if [ "${TOOLCHAIN_NAME}" == "gcc-ilp32" ]
@@ -101,6 +108,7 @@ then
 
   # copy config files
   cp -r package/${TOOLCHAIN_NAME}.spec                ${BUILD_DIR}/data/${TOOLCHAIN_NAME}.spec
+  sed -i "s/PACKAGE_NAME/${PACKAGE_NAME}/g"           ${BUILD_DIR}/data/${TOOLCHAIN_NAME}.spec
   sed -i "s/TOOLCHAIN_VERSION/${TOOLCHAIN_VERSION}/g" ${BUILD_DIR}/data/${TOOLCHAIN_NAME}.spec
 
 elif [ "${DISTRO_NAME}" == "ubuntu" ]
@@ -108,6 +116,7 @@ then
 
   # copy config files
   cp -r package/${TOOLCHAIN_NAME}.ctrl                ${BUILD_DIR}/data/control
+  sed -i "s/PACKAGE_NAME/${PACKAGE_NAME}/g"           ${BUILD_DIR}/data/control
   sed -i "s/TOOLCHAIN_VERSION/${TOOLCHAIN_VERSION}/g" ${BUILD_DIR}/data/control
   sed -i "s/DISTRO_NAME/${DISTRO_NAME}/g"             ${BUILD_DIR}/data/control
   sed -i "s/DISTRO_VERSION/${DISTRO_VERSION}/g"       ${BUILD_DIR}/data/control
@@ -141,8 +150,8 @@ container_id=$(docker ps -a | grep ${IMAGE_TAG} | head -n1 | awk '{print $1}')
 
 if [ "${DISTRO_NAME}" == "centos" ]
 then
-  docker cp ${container_id}:/root/rpmbuild/RPMS/aarch64/${TOOLCHAIN_NAME}-${TOOLCHAIN_VERSION}-${DATESTRING}.el8.aarch64.rpm ${BUILD_DIR}/
+  docker cp ${container_id}:/root/rpmbuild/RPMS/aarch64/${PACKAGE_NAME}-${TOOLCHAIN_VERSION}-${DATESTRING}.el8.aarch64.rpm ${BUILD_DIR}/
 elif [ "${DISTRO_NAME}" == "ubuntu" ]
 then
-  docker cp ${container_id}:/tmp/${TOOLCHAIN_NAME}-${TOOLCHAIN_VERSION}-${DATESTRING}-${DISTRO_NAME}-${DISTRO_VERSION}_arm64.deb ${BUILD_DIR}/
+  docker cp ${container_id}:/tmp/${PACKAGE_NAME}-${TOOLCHAIN_VERSION}-${DATESTRING}-${DISTRO_NAME}-${DISTRO_VERSION}_arm64.deb ${BUILD_DIR}/
 fi

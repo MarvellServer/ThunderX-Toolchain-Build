@@ -1,4 +1,4 @@
-Package: flang
+Package: PACKAGE_NAME
 Version: TOOLCHAIN_VERSION-DATESTRING-DISTRO_NAME-DISTRO_VERSION
 Section: custom
 Priority: optional
