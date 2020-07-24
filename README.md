@@ -69,3 +69,11 @@ Docker images can build using the specific dockerfiles with  build.sh
 
 Additional files needed to checkout the git repositories like "github_rsa", "ssh_config" and application specific files should be placed in data folder. These files are not part of the repository.
 
+
+** ssh_config **
+    user@localhost:~/ThunderX-Toolchain-Build/dockerfiles$ cat extras/ssh_config
+    Host github.com
+        HostName github.com
+        User user
+        IdentityFile ~/.ssh/github_rsa
+        StrictHostKeyChecking=no
