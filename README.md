@@ -71,6 +71,7 @@ Additional files needed to checkout the git repositories like "github_rsa", "ssh
 
 
 ** ssh_config **
+
     user@localhost:~/ThunderX-Toolchain-Build/dockerfiles$ cat extras/ssh_config
     Host github.com
         HostName github.com
