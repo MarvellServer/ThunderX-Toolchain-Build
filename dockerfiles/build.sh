@@ -134,7 +134,7 @@ fi
 # copy extra files
 cd ${BASE_DIR}
 cp extras/github_rsa     ${BUILD_DIR}/data/github_rsa
-cp extras/ssh_config     ${BUILD_DIR}/data/config
+cp extras/ssh_config     ${BUILD_DIR}/data/ssh_config
 cp extras/cpu2017.tar.xz ${BUILD_DIR}/data/cpu2017.tar.xz
 
 # build the docker
