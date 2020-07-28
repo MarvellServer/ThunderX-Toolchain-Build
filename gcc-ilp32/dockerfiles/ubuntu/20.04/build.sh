@@ -43,8 +43,8 @@ container_id=$(docker ps -a | grep ${IMAGE_TAG} | head -n1 | awk '{print $1}')
 
 if [ "${DISTRO_NAME}" == "centos" ]
 then
-  docker cp ${container_id}:/root/rpmbuild/RPMS/aarch64/${PACKAGE_NAME}-${TOOLCHAIN_VERSION}-${DATESTRING}.el8.aarch64.rpm ${BASE_DIR}/
+  docker cp ${container_id}:/root/rpmbuild/RPMS/aarch64/gcc-ilp32-10.0.1-${DATESTRING}.el8.aarch64.rpm ${BASE_DIR}/
 elif [ "${DISTRO_NAME}" == "ubuntu" ]
 then
-  docker cp ${container_id}:/tmp/${PACKAGE_NAME}-${TOOLCHAIN_VERSION}-${DATESTRING}-${DISTRO_NAME}-${DISTRO_VERSION}_arm64.deb ${BASE_DIR}/
+  docker cp ${container_id}:/tmp/gcc-ilp32-10.0.1-${DATESTRING}-${DISTRO_NAME}-${DISTRO_VERSION}_arm64.deb ${BASE_DIR}/
 fi
