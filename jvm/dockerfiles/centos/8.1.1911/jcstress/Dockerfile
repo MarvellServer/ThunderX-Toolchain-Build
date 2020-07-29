@@ -26,3 +26,9 @@ RUN cd /tmp && \
 # run Jcstress
 RUN cd /tmp/jcstress && \
     java -jar tests-all/target/jcstress.jar
+
+RUN echo '============== Docker is done with jcstress ==========='
+RUN echo 'Capture results by executing:'
+RUN echo 'results_file=$(docker run jcstress:latest bash -c "ls /tmp/jcstress/jcstress-results-*.bin.gz")'
+RUN echo 'container_id=$(docker ps -a | grep '\''jcstress:latest'\'' | head -n1 | awk '\''{print $1}'\'')'
+RUN echo 'docker cp ${container_id}:${results_file} .'
