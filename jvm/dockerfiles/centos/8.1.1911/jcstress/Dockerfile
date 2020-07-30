@@ -18,17 +18,11 @@ ENV PATH ${JAVA_HOME}/bin:${PATH}
 RUN dnf -y install maven mercurial
 
 # download and build jcstress
-RUN cd /tmp && \
+RUN mkdir /work && \
+    cd /work && \
     hg clone http://hg.openjdk.java.net/code-tools/jcstress/ jcstress && \
     cd jcstress && \
     mvn clean install
 
-# run Jcstress
-RUN cd /tmp/jcstress && \
-    java -jar tests-all/target/jcstress.jar
-
-RUN echo $'============== Docker is done with jcstress =========== \n\
-Capture results by executing: \n\
-    results_file=$(docker run jcstress:latest bash -c "ls /tmp/jcstress/jcstress-results-*.bin.gz") \n\
-    container_id=$(docker ps -a | grep '\''jcstress:latest'\'' | head -n1 | awk '\''{print $1}'\'') \n\
-    docker cp ${container_id}:${results_file} .'
+# define ENTRYPOINT
+ENTRYPOINT bash -c "cd /work/jcstress && java -jar tests-all/target/jcstress.jar"
