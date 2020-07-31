@@ -49,6 +49,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         sudo \
         openssh-client \
         lbzip2 \
+        xz-utils \
         gettext
 
 # update python defaults
