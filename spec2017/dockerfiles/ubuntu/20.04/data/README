@@ -1,0 +1,6 @@
+To run spec2017 in a docker, you need the following files in this directory:
+cpu2017.tar.xz -- the spec2017 tar ball
+flang.cfg      -- the config file to run spec2017
+toolchain .rpm or .deb file
+lib*.so        -- any other special libraries you config file may need
+
