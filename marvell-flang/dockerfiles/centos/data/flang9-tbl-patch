@@ -1,0 +1,577 @@
+diff --git a/include/llvm/Analysis/TargetTransformInfo.h b/include/llvm/Analysis/TargetTransformInfo.h
+index 7574b811b..15f950211 100644
+--- a/include/llvm/Analysis/TargetTransformInfo.h
++++ b/include/llvm/Analysis/TargetTransformInfo.h
+@@ -929,7 +929,8 @@ public:
+   /// \p AddressSpace is address space of the pointer.
+   /// \p UseMaskForCond indicates if the memory access is predicated.
+   /// \p UseMaskForGaps indicates if gaps should be masked.
+-  int getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy, unsigned Factor,
++  int getInterleavedMemoryOpCost(Instruction *I, unsigned VF,
++                                 unsigned Opcode, Type *VecTy, unsigned Factor,
+                                  ArrayRef<unsigned> Indices, unsigned Alignment,
+                                  unsigned AddressSpace,
+                                  bool UseMaskForCond = false,
+@@ -1267,7 +1268,8 @@ public:
+   virtual int getGatherScatterOpCost(unsigned Opcode, Type *DataTy,
+                                      Value *Ptr, bool VariableMask,
+                                      unsigned Alignment) = 0;
+-  virtual int getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy,
++  virtual int getInterleavedMemoryOpCost(Instruction *I, unsigned VF,
++                                         unsigned Opcode, Type *VecTy,
+                                          unsigned Factor,
+                                          ArrayRef<unsigned> Indices,
+                                          unsigned Alignment,
+@@ -1651,11 +1653,12 @@ public:
+     return Impl.getGatherScatterOpCost(Opcode, DataTy, Ptr, VariableMask,
+                                        Alignment);
+   }
+-  int getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy, unsigned Factor,
++  int getInterleavedMemoryOpCost(Instruction *I, unsigned VF,
++                                 unsigned Opcode, Type *VecTy, unsigned Factor,
+                                  ArrayRef<unsigned> Indices, unsigned Alignment,
+                                  unsigned AddressSpace, bool UseMaskForCond,
+                                  bool UseMaskForGaps) override {
+-    return Impl.getInterleavedMemoryOpCost(Opcode, VecTy, Factor, Indices,
++    return Impl.getInterleavedMemoryOpCost(I, VF, Opcode, VecTy, Factor, Indices,
+                                            Alignment, AddressSpace,
+                                            UseMaskForCond, UseMaskForGaps);
+   }
+diff --git a/include/llvm/Analysis/TargetTransformInfoImpl.h b/include/llvm/Analysis/TargetTransformInfoImpl.h
+index b99e1eb9a..0f0067ea8 100644
+--- a/include/llvm/Analysis/TargetTransformInfoImpl.h
++++ b/include/llvm/Analysis/TargetTransformInfoImpl.h
+@@ -447,7 +447,8 @@ public:
+     return 1;
+   }
+ 
+-  unsigned getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy,
++  unsigned getInterleavedMemoryOpCost(Instruction *I, unsigned VF,
++                                      unsigned Opcode, Type *VecTy,
+                                       unsigned Factor,
+                                       ArrayRef<unsigned> Indices,
+                                       unsigned Alignment, unsigned AddressSpace,
+diff --git a/include/llvm/CodeGen/BasicTTIImpl.h b/include/llvm/CodeGen/BasicTTIImpl.h
+index 70bf670fd..c563bebe5 100644
+--- a/include/llvm/CodeGen/BasicTTIImpl.h
++++ b/include/llvm/CodeGen/BasicTTIImpl.h
+@@ -862,7 +862,8 @@ public:
+     return Cost;
+   }
+ 
+-  unsigned getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy,
++  unsigned getInterleavedMemoryOpCost(Instruction *I, unsigned VF,
++                                      unsigned Opcode, Type *VecTy,
+                                       unsigned Factor,
+                                       ArrayRef<unsigned> Indices,
+                                       unsigned Alignment, unsigned AddressSpace,
+diff --git a/include/llvm/CodeGen/TargetLowering.h b/include/llvm/CodeGen/TargetLowering.h
+index ca7548cd8..0a5a4ece6 100644
+--- a/include/llvm/CodeGen/TargetLowering.h
++++ b/include/llvm/CodeGen/TargetLowering.h
+@@ -997,7 +997,7 @@ public:
+     const bool OptForSize = SI->getParent()->getParent()->hasOptSize();
+     const unsigned MinDensity = getMinimumJumpTableDensity(OptForSize);
+     const unsigned MaxJumpTableSize = getMaximumJumpTableSize();
+-    
++
+     // Check whether the number of cases is small enough and
+     // the range is dense enough for a jump table.
+     if ((OptForSize || Range <= MaxJumpTableSize) &&
+@@ -2432,6 +2432,12 @@ public:
+     return false;
+   }
+ 
++  /// Lower a shufflevector to target specific intrinsics. Return
++  /// true on success.
++  ///
++  /// \p SI is the shufflevector to RE-interleave the stored vector.
++  virtual bool lowerShuffleVector(ShuffleVectorInst *SI) const { return false; }
++
+   /// Return true if zero-extending the specific node Val to type VT2 is free
+   /// (either because it's implicitly zero-extended such as ARM ldrb / ldrh or
+   /// because it's folded such as X86 zero-extending loads).
+diff --git a/include/llvm/IR/IntrinsicsAArch64.td b/include/llvm/IR/IntrinsicsAArch64.td
+index 832aca4fd..451636d7c 100644
+--- a/include/llvm/IR/IntrinsicsAArch64.td
++++ b/include/llvm/IR/IntrinsicsAArch64.td
+@@ -555,6 +555,9 @@ def int_aarch64_neon_st3lane  : AdvSIMD_3Vec_Store_Lane_Intrinsic;
+ def int_aarch64_neon_st4lane  : AdvSIMD_4Vec_Store_Lane_Intrinsic;
+ 
+ let TargetPrefix = "aarch64" in {  // All intrinsics start with "llvm.aarch64.".
++  class AdvSIMD_Tbl1_temp_Intrinsic
++    : Intrinsic<[llvm_anyvector_ty], [llvm_anyvector_ty, llvm_v16i8_ty],
++                [IntrNoMem]>;
+   class AdvSIMD_Tbl1_Intrinsic
+     : Intrinsic<[llvm_anyvector_ty], [llvm_v16i8_ty, LLVMMatchType<0>],
+                 [IntrNoMem]>;
+@@ -592,6 +595,7 @@ let TargetPrefix = "aarch64" in {  // All intrinsics start with "llvm.aarch64.".
+                  llvm_v16i8_ty, llvm_v16i8_ty, LLVMMatchType<0>],
+                 [IntrNoMem]>;
+ }
++def int_aarch64_neon_tbl1_temp : AdvSIMD_Tbl1_temp_Intrinsic;
+ def int_aarch64_neon_tbl1 : AdvSIMD_Tbl1_Intrinsic;
+ def int_aarch64_neon_tbl2 : AdvSIMD_Tbl2_Intrinsic;
+ def int_aarch64_neon_tbl3 : AdvSIMD_Tbl3_Intrinsic;
+diff --git a/lib/Analysis/TargetTransformInfo.cpp b/lib/Analysis/TargetTransformInfo.cpp
+index eb04c3445..06920ebe7 100644
+--- a/lib/Analysis/TargetTransformInfo.cpp
++++ b/lib/Analysis/TargetTransformInfo.cpp
+@@ -45,7 +45,7 @@ struct NoTTIImpl : TargetTransformInfoImplCRTPBase<NoTTIImpl> {
+ bool HardwareLoopInfo::canAnalyze(LoopInfo &LI) {
+   // If the loop has irreducible control flow, it can not be converted to
+   // Hardware loop.
+-  LoopBlocksRPO RPOT(L);  
++  LoopBlocksRPO RPOT(L);
+   RPOT.perform(&LI);
+   if (containsIrreducibleCFG<const BasicBlock *>(RPOT, LI))
+     return false;
+@@ -661,11 +661,12 @@ int TargetTransformInfo::getGatherScatterOpCost(unsigned Opcode, Type *DataTy,
+   return Cost;
+ }
+ 
+-int TargetTransformInfo::getInterleavedMemoryOpCost(
++int TargetTransformInfo::getInterleavedMemoryOpCost(Instruction *I, unsigned VF,
+     unsigned Opcode, Type *VecTy, unsigned Factor, ArrayRef<unsigned> Indices,
+     unsigned Alignment, unsigned AddressSpace, bool UseMaskForCond,
+     bool UseMaskForGaps) const {
+-  int Cost = TTIImpl->getInterleavedMemoryOpCost(Opcode, VecTy, Factor, Indices,
++  int Cost = TTIImpl->getInterleavedMemoryOpCost(I, VF,
++                                                 Opcode, VecTy, Factor, Indices,
+                                                  Alignment, AddressSpace,
+                                                  UseMaskForCond,
+                                                  UseMaskForGaps);
+diff --git a/lib/CodeGen/InterleavedAccessPass.cpp b/lib/CodeGen/InterleavedAccessPass.cpp
+index 14bc560a5..d2de79cb0 100644
+--- a/lib/CodeGen/InterleavedAccessPass.cpp
++++ b/lib/CodeGen/InterleavedAccessPass.cpp
+@@ -111,6 +111,10 @@ private:
+   bool lowerInterleavedStore(StoreInst *SI,
+                              SmallVector<Instruction *, 32> &DeadInsts);
+ 
++  /// Transform an type unmatched shufflevector into target specific intrinsics.
++  bool lowerShuffleVector(ShuffleVectorInst *SI,
++                          SmallVector<Instruction *, 32> &DeadInsts);
++
+   /// Returns true if the uses of an interleaved load by the
+   /// extractelement instructions in \p Extracts can be replaced by uses of the
+   /// shufflevector instructions in \p Shuffles instead. If so, the necessary
+@@ -441,6 +445,22 @@ bool InterleavedAccess::lowerInterleavedStore(
+   return true;
+ }
+ 
++bool InterleavedAccess::lowerShuffleVector(
++    ShuffleVectorInst *SI, SmallVector<Instruction *, 32> &DeadInsts) {
++
++  LLVM_DEBUG(dbgs() << "IA: Found a shufflevector: " << *SI << "\n");
++
++  // Try to create target specific intrinsics to replace the shuffle.
++  if (!TLI->lowerShuffleVector(SI))
++    return false;
++
++  // Already have a new target specific tbl instruction. Erase the old
++  // shufflevector.
++  DeadInsts.push_back(SI);
++
++  return true;
++}
++
+ bool InterleavedAccess::runOnFunction(Function &F) {
+   auto *TPC = getAnalysisIfAvailable<TargetPassConfig>();
+   if (!TPC || !LowerInterleavedAccesses)
+@@ -468,5 +488,14 @@ bool InterleavedAccess::runOnFunction(Function &F) {
+   for (auto I : DeadInsts)
+     I->eraseFromParent();
+ 
++  SmallVector<Instruction *, 32> SFDeadInsts;
++  for (auto &I : instructions(F)) {
++    if (ShuffleVectorInst *SHI = dyn_cast<ShuffleVectorInst>(&I))
++      Changed |= lowerShuffleVector(SHI, SFDeadInsts);
++  }
++
++  for (auto *I : SFDeadInsts)
++    I->eraseFromParent();
++
+   return Changed;
+ }
+diff --git a/lib/CodeGen/InterleavedLoadCombinePass.cpp b/lib/CodeGen/InterleavedLoadCombinePass.cpp
+index 9525da849..7f7a3ae85 100644
+--- a/lib/CodeGen/InterleavedLoadCombinePass.cpp
++++ b/lib/CodeGen/InterleavedLoadCombinePass.cpp
+@@ -1206,6 +1206,7 @@ bool InterleavedLoadCombineImpl::combine(std::list<VectorInfo> &InterleavedLoad,
+   for (unsigned i = 0; i < Factor; i++)
+     Indices.push_back(i);
+   InterleavedCost = TTI.getInterleavedMemoryOpCost(
++      nullptr, 0,
+       Instruction::Load, ILTy, Factor, Indices, InsertionPoint->getAlignment(),
+       InsertionPoint->getPointerAddressSpace());
+ 
+diff --git a/lib/Target/AArch64/AArch64ISelDAGToDAG.cpp b/lib/Target/AArch64/AArch64ISelDAGToDAG.cpp
+index cd7e927ac..a1b71ed02 100644
+--- a/lib/Target/AArch64/AArch64ISelDAGToDAG.cpp
++++ b/lib/Target/AArch64/AArch64ISelDAGToDAG.cpp
+@@ -3341,6 +3341,19 @@ void AArch64DAGToDAGISel::Select(SDNode *Node) {
+     case Intrinsic::aarch64_tagp:
+       SelectTagP(Node);
+       return;
++    case Intrinsic::aarch64_neon_tbl1_temp: {
++      SDLoc Dl(Node);
++
++      SmallVector<SDValue, 2> Ops;
++      // the source vector
++      Ops.push_back(Node->getOperand(1));
++      // the mask
++      Ops.push_back(Node->getOperand(2));
++      ReplaceNode(Node,
++                  CurDAG->getMachineNode(AArch64::TBLv16i8One, Dl, VT, Ops));
++
++      return;
++    }
+     case Intrinsic::aarch64_neon_tbl2:
+       SelectTable(Node, 2,
+                   VT == MVT::v8i8 ? AArch64::TBLv8i8Two : AArch64::TBLv16i8Two,
+diff --git a/lib/Target/AArch64/AArch64ISelLowering.cpp b/lib/Target/AArch64/AArch64ISelLowering.cpp
+index 03923878f..c007f4516 100644
+--- a/lib/Target/AArch64/AArch64ISelLowering.cpp
++++ b/lib/Target/AArch64/AArch64ISelLowering.cpp
+@@ -8712,6 +8712,124 @@ bool AArch64TargetLowering::lowerInterleavedStore(StoreInst *SI,
+   return true;
+ }
+ 
++bool AArch64TargetLowering::lowerShuffleVector(ShuffleVectorInst *SI) const {
++  IRBuilder<> Builder(SI);
++
++  // First check the shuffle_vector instruction
++  // 1) The first operand has to be 128 bit, byte mask requires the vector
++  //    size has to be 16*i8. We do not handle small vector shuffle here for
++  //    TBL1 instruction, for example, v2i16 size is 32
++  // 2) The 2nd operand has to be UNDEF for tbl1 instruction
++  if (SI->getOperand(0)->getType()->isVectorTy() &&
++      SI->getOperand(0)->getType()->getPrimitiveSizeInBits() != 128)
++    return false;
++
++  // The 2nd operand has to be UNDEF
++  if (Constant *C = dyn_cast<Constant>(SI->getOperand(1)))
++    if (!(isa<UndefValue>(C)))
++      return false;
++
++  // We only handle shuffle_vector which has only one user instruction here,
++  // because multiple user instructions will cause multiple tbl1 instructions
++  // generated. we leave it to the next stage implementation
++  if (!SI->hasOneUse())
++    return false;
++
++  // Now we check the one use instruction, we only handle UItoFP at this stage
++  // and a few other instructions. The user instruction list can also be
++  // expanded later
++  auto UI = SI->user_begin();
++  Instruction *I = cast<Instruction>(*UI);
++
++  // we only support the following instructions at this stage
++  // it can be expanded
++  if (I->getOpcode() != Instruction::UIToFP &&
++      I->getOpcode() != Instruction::FAdd &&
++      I->getOpcode() != Instruction::FSub &&
++      I->getOpcode() != Instruction::FMul &&
++      I->getOpcode() != Instruction::Add &&
++      I->getOpcode() != Instruction::Sub) {
++    LLVM_DEBUG(dbgs() << "Quit Shuffle vector's user instruction not qualify : "
++                      << *I << "\n");
++    return false;
++  }
++
++  // Now we do the type check on the vector.
++  // If the type of the input vector to the user instuction is the same the
++  // output of the user instruction, then it is already handled in later DAG
++  // lowering stage, no need to to handle them here
++  VectorType *SVTy = SI->getType();
++  if (SVTy == I->getType())
++    return false;
++
++  // At the point we exclude all the not handled situations, we can work out
++  // the intrinsic call
++  Type *SVEltTy = SVTy->getElementType();
++  unsigned SVNum = SVTy->getNumElements();
++  Type *PromotedIntTy;
++
++  // Here we need to decide the tbl1 instruction's result type based on
++  // its users (UIToFP) result type
++  // As the result type can only be 64-bit or 32-bit float, we can set
++  // corresponding integer type to the tbl1's result
++  unsigned UIEltSize =
++      I->getType()->getArrayElementType()->getScalarSizeInBits();
++  if (UIEltSize == 64 && SVNum == 2)
++    PromotedIntTy = Type::getInt64Ty(SI->getType()->getContext());
++  else if (UIEltSize == 32 && SVNum == 4)
++    PromotedIntTy = Type::getInt32Ty(SI->getType()->getContext());
++  else
++    return false;
++
++  VectorType *VecTy = VectorType::get(PromotedIntTy, SVNum);
++
++  // VecTy is the tbl1 result type, this needs to be worked out
++  // Followed by tbl1 input source vector type
++  Type *Tys[2] = {VecTy, SI->getOperand(0)->getType()};
++
++  // Get the input Mask
++  auto Mask = SI->getShuffleMask();
++
++  // Generate the intrinsic function call
++  Function *Tbl1Func = Intrinsic::getDeclaration(
++      SI->getModule(), Intrinsic::aarch64_neon_tbl1_temp, Tys);
++
++  // Generate one Tbl1 for each use, could merge if the uses are the same
++  // in terms of the input type
++  for (auto UI = SI->user_begin(), E = SI->user_end(); UI != E; UI++) {
++    Instruction *I = cast<Instruction>(*UI);
++    Type *UserTy = I->getType();
++
++    // Two operands, 1st is the Mask, 2nd one is the input vector
++    SmallVector<Value *, 2> Ops;
++
++    // This is the vector operand to the Tbl1 intrisic, any vector type is OK
++    // however we need to adjust it to match the user result type
++    // we should be save to arbitarily change the type here however there could
++    // be a problem in later passes
++    Ops.push_back(SI->getOperand(0));
++
++    // This is the mask operand to the Tbl1 intrinsic, it has to be v16i8 type
++    // we need to work it out from the input mask together with the result type
++    // input mask is SI->getOperand[2]
++    // result type is the user of SI, I->getType()
++    unsigned InputEltSize = SVEltTy->getPrimitiveSizeInBits();
++    unsigned OutputEltSize =
++        UserTy->getArrayElementType()->getPrimitiveSizeInBits();
++    Value *Tbl1mask =
++        createTbl1Mask(Builder, Mask, SVNum, InputEltSize, OutputEltSize);
++    LLVM_DEBUG(dbgs() << "Tbl1 mask: "; Tbl1mask->dump());
++    Ops.push_back(Tbl1mask);
++
++    // Make the call for this user
++    CallInst *Tbl1 = Builder.CreateCall(Tbl1Func, Ops);
++    UI->replaceUsesOfWith(SI, Tbl1);
++  }
++
++  // Return true if it is successful
++  return true;
++}
++
+ static bool memOpAlign(unsigned DstAlign, unsigned SrcAlign,
+                        unsigned AlignCheck) {
+   return ((SrcAlign == 0 || SrcAlign % AlignCheck == 0) &&
+@@ -12085,6 +12203,54 @@ void AArch64TargetLowering::finalizeLowering(MachineFunction &MF) const {
+   TargetLoweringBase::finalizeLowering(MF);
+ }
+ 
++Constant *AArch64TargetLowering::createTbl1Mask(IRBuilderBase &Builder,
++                                                ArrayRef<int> InputMask,
++                                                unsigned NumElts,
++                                                unsigned InputEltSize,
++                                                unsigned OutputEltSize) const {
++
++  unsigned InputEltIdx = 0;
++  unsigned CurrInputIdx = 0;
++  unsigned CurrOffset;
++  unsigned OffsetLeft = 0;
++  unsigned OffsetRight = InputEltSize;
++
++  SmallVector<Constant *, 16> Mask;
++  for (unsigned Idx = 0; Idx < 16; Idx++) {
++    // if all the elements are placed in the output vector, then just fill up
++    // with out of range index
++    if (InputEltIdx >= NumElts)
++      Mask.push_back(Builder.getInt8(255));
++    else {
++      CurrOffset = Idx * 8;
++      if (CurrOffset >= OffsetLeft && CurrOffset < OffsetRight) {
++        CurrInputIdx = InputMask[InputEltIdx] * InputEltSize / 8 +
++                       (CurrOffset - OffsetLeft) / 8;
++        Mask.push_back(Builder.getInt8(CurrInputIdx));
++      }
++      // finished one input element, move to the next
++      else if (CurrOffset == OffsetRight) {
++        InputEltIdx++;
++        if (InputEltIdx >= NumElts) {
++          Mask.push_back(Builder.getInt8(255));
++          continue;
++        }
++        OffsetLeft = OutputEltSize * InputEltIdx;
++        OffsetRight = OffsetLeft + InputEltSize;
++        // check this new byte
++        if (CurrOffset >= OffsetLeft && CurrOffset < OffsetRight) {
++          CurrInputIdx = InputMask[InputEltIdx] * InputEltSize / 8 +
++                         (CurrOffset - OffsetLeft) / 8;
++          Mask.push_back(Builder.getInt8(CurrInputIdx));
++        } else
++          Mask.push_back(Builder.getInt8(255));
++      } else
++        Mask.push_back(Builder.getInt8(255));
++    }
++  }
++  return ConstantVector::get(Mask);
++}
++
+ // Unlike X86, we let frame lowering assign offsets to all catch objects.
+ bool AArch64TargetLowering::needsFixedCatchObjects() const {
+   return false;
+diff --git a/lib/Target/AArch64/AArch64ISelLowering.h b/lib/Target/AArch64/AArch64ISelLowering.h
+index 86f313933..954448715 100644
+--- a/lib/Target/AArch64/AArch64ISelLowering.h
++++ b/lib/Target/AArch64/AArch64ISelLowering.h
+@@ -348,7 +348,7 @@ public:
+                             unsigned Factor) const override;
+   bool lowerInterleavedStore(StoreInst *SI, ShuffleVectorInst *SVI,
+                              unsigned Factor) const override;
+-
++  bool lowerShuffleVector(ShuffleVectorInst *SI) const override;
+   bool isLegalAddImmediate(int64_t) const override;
+   bool isLegalICmpImmediate(int64_t) const override;
+ 
+@@ -732,6 +732,13 @@ private:
+   bool shouldNormalizeToSelectSequence(LLVMContext &, EVT) const override;
+ 
+   void finalizeLowering(MachineFunction &MF) const override;
++
++  /// Create a tbl1 mask with default 0xFF.
++  /// This function creates tbl1 mask whose elements are defaults to 0xff which
++  /// means to fill '0' to the output vector.
++  Constant *createTbl1Mask(IRBuilderBase &Builder, ArrayRef<int> InputMask,
++                           unsigned NumElts, unsigned InputEltSize,
++                           unsigned OutputEltSize) const;
+ };
+ 
+ namespace AArch64 {
+diff --git a/lib/Target/AArch64/AArch64TargetTransformInfo.cpp b/lib/Target/AArch64/AArch64TargetTransformInfo.cpp
+index 301bf72d5..bd916863c 100644
+--- a/lib/Target/AArch64/AArch64TargetTransformInfo.cpp
++++ b/lib/Target/AArch64/AArch64TargetTransformInfo.cpp
+@@ -669,7 +669,8 @@ int AArch64TTIImpl::getMemoryOpCost(unsigned Opcode, Type *Ty,
+   return LT.first;
+ }
+ 
+-int AArch64TTIImpl::getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy,
++int AArch64TTIImpl::getInterleavedMemoryOpCost(Instruction *I, unsigned VF,
++                                               unsigned Opcode, Type *VecTy,
+                                                unsigned Factor,
+                                                ArrayRef<unsigned> Indices,
+                                                unsigned Alignment,
+@@ -692,7 +693,31 @@ int AArch64TTIImpl::getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy,
+       return Factor * TLI->getNumInterleavedAccesses(SubVecTy, DL);
+   }
+ 
+-  return BaseT::getInterleavedMemoryOpCost(Opcode, VecTy, Factor, Indices,
++  // we now check to see if this interleave memory access can be lowered
++  // to TBL1 instruction later in the IntereleavedAccessPass
++  // if True, then the cost will be the number of TBL1 * the basic cost of
++  // TBL1 instruction which is set to 1 at this time
++  if (I && VF > 1 && I->hasOneUse()) {
++    auto UI = I->user_begin();
++    Instruction *UserInstruction = cast<Instruction>(*UI);
++    // We currently just support the following instructions, can be expanded
++    if (UserInstruction->getOpcode() == Instruction::UIToFP ||
++        UserInstruction->getOpcode() == Instruction::FAdd ||
++        UserInstruction->getOpcode() == Instruction::FSub ||
++        UserInstruction->getOpcode() == Instruction::FMul ||
++        UserInstruction->getOpcode() == Instruction::Add ||
++        UserInstruction->getOpcode() == Instruction::Sub) {
++      // the first check to make sure the result can form a 128-bit vector
++      // the 2nd check to make sure the input data can fit into 128-bit vector
++      // so that we can use tbl1 instruction
++      // there will be Group->getFactor() tbl1 generated, each tbl1 costs 1
++      if ((UserInstruction->getType()->getScalarSizeInBits() * VF == 128) &&
++          (I->getType()->getScalarSizeInBits() * Factor * VF == 128))
++        return Factor * 1;
++    }
++  }
++
++  return BaseT::getInterleavedMemoryOpCost(I, VF, Opcode, VecTy, Factor, Indices,
+                                            Alignment, AddressSpace,
+                                            UseMaskForCond, UseMaskForGaps);
+ }
+diff --git a/lib/Target/AArch64/AArch64TargetTransformInfo.h b/lib/Target/AArch64/AArch64TargetTransformInfo.h
+index 95cda63b0..7630c8d33 100644
+--- a/lib/Target/AArch64/AArch64TargetTransformInfo.h
++++ b/lib/Target/AArch64/AArch64TargetTransformInfo.h
+@@ -146,7 +146,8 @@ public:
+ 
+   bool getTgtMemIntrinsic(IntrinsicInst *Inst, MemIntrinsicInfo &Info);
+ 
+-  int getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy, unsigned Factor,
++  int getInterleavedMemoryOpCost(Instruction *I, unsigned VF,
++                                 unsigned Opcode, Type *VecTy, unsigned Factor,
+                                  ArrayRef<unsigned> Indices, unsigned Alignment,
+                                  unsigned AddressSpace,
+                                  bool UseMaskForCond = false,
+diff --git a/lib/Transforms/Vectorize/LoopVectorize.cpp b/lib/Transforms/Vectorize/LoopVectorize.cpp
+index cf52f9bba..d96045963 100644
+--- a/lib/Transforms/Vectorize/LoopVectorize.cpp
++++ b/lib/Transforms/Vectorize/LoopVectorize.cpp
+@@ -187,7 +187,7 @@ static cl::opt<bool> EnableInterleavedMemAccesses(
+     cl::desc("Enable vectorization on interleaved memory accesses in a loop"));
+ 
+ /// An interleave-group may need masking if it resides in a block that needs
+-/// predication, or in order to mask away gaps. 
++/// predication, or in order to mask away gaps.
+ static cl::opt<bool> EnableMaskedInterleavedMemAccesses(
+     "enable-masked-interleaved-mem-accesses", cl::init(false), cl::Hidden,
+     cl::desc("Enable vectorization on masked interleaved memory accesses in a loop"));
+@@ -1273,7 +1273,7 @@ private:
+   SmallPtrSet<BasicBlock *, 4> PredicatedBBsAfterVectorization;
+ 
+   /// Records whether it is allowed to have the original scalar loop execute at
+-  /// least once. This may be needed as a fallback loop in case runtime 
++  /// least once. This may be needed as a fallback loop in case runtime
+   /// aliasing/dependence checks fail, or to handle the tail/remainder
+   /// iterations when the trip count is unknown or doesn't divide by the VF,
+   /// or as a peel-loop to handle gaps in interleave-groups.
+@@ -2231,7 +2231,7 @@ void InnerLoopVectorizer::vectorizeInterleaveGroup(Instruction *Instr,
+           IVec, NewPtrs[Part], Group->getAlignment(), ShuffledMask);
+     }
+     else
+-      NewStoreInstr = Builder.CreateAlignedStore(IVec, NewPtrs[Part], 
++      NewStoreInstr = Builder.CreateAlignedStore(IVec, NewPtrs[Part],
+         Group->getAlignment());
+ 
+     Group->addMetadata(NewStoreInstr);
+@@ -3708,7 +3708,7 @@ void InnerLoopVectorizer::fixLCSSAPHIs() {
+       auto *IncomingValue = LCSSAPhi.getIncomingValue(0);
+       // Non-instruction incoming values will have only one value.
+       unsigned LastLane = 0;
+-      if (isa<Instruction>(IncomingValue)) 
++      if (isa<Instruction>(IncomingValue))
+           LastLane = Cost->isUniformAfterVectorization(
+                          cast<Instruction>(IncomingValue), VF)
+                          ? 0
+@@ -4455,9 +4455,9 @@ bool LoopVectorizationCostModel::interleavedAccessCanBeWidened(Instruction *I,
+   // Check if masking is required.
+   // A Group may need masking for one of two reasons: it resides in a block that
+   // needs predication, or it was decided to use masking to deal with gaps.
+-  bool PredicatedAccessRequiresMasking = 
++  bool PredicatedAccessRequiresMasking =
+       Legal->blockNeedsPredication(I->getParent()) && Legal->isMaskRequired(I);
+-  bool AccessWithGapsRequiresMasking = 
++  bool AccessWithGapsRequiresMasking =
+       Group->requiresScalarEpilogue() && !IsScalarEpilogueAllowed;
+   if (!PredicatedAccessRequiresMasking && !AccessWithGapsRequiresMasking)
+     return true;
+@@ -4748,7 +4748,7 @@ Optional<unsigned> LoopVectorizationCostModel::computeMaxVF(bool OptForSize) {
+   // We don't create an epilogue when optimizing for size.
+   // Invalidate interleave groups that require an epilogue if we can't mask
+   // the interleave-group.
+-  if (!useMaskedInterleavedAccesses(TTI)) 
++  if (!useMaskedInterleavedAccesses(TTI))
+     InterleaveInfo.invalidateGroupsRequiringScalarEpilogue();
+ 
+   unsigned MaxVF = computeFeasibleMaxVF(OptForSize, TC);
+@@ -5631,9 +5631,9 @@ unsigned LoopVectorizationCostModel::getInterleaveGroupCost(Instruction *I,
+   }
+ 
+   // Calculate the cost of the whole interleaved group.
+-  bool UseMaskForGaps = 
++  bool UseMaskForGaps =
+       Group->requiresScalarEpilogue() && !IsScalarEpilogueAllowed;
+-  unsigned Cost = TTI.getInterleavedMemoryOpCost(
++  unsigned Cost = TTI.getInterleavedMemoryOpCost(I, VF,
+       I->getOpcode(), WideVecTy, Group->getFactor(), Indices,
+       Group->getAlignment(), AS, Legal->isMaskRequired(I), UseMaskForGaps);
+ 

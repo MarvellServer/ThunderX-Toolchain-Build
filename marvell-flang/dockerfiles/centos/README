@@ -1,0 +1,12 @@
+To build, simply run ./build.sh
+
+The current Dockerfile has a patch to apply to the source code.
+You need to put the patch file in the data/ directory and copy
+it into the docker as shown in the Dockerfile.
+
+You can adjust the patching by changing the Dockerfile. Please
+remember to update the package name in the .spec file in
+the data directory.
+
+You also need to update the package name in the build.sh to copy
+it out at the end of the build.

@@ -1,0 +1,17 @@
+You can type ./build.sh to start the build.
+
+We did not distinguish the different versions of ubuntu OS here as
+they are basically the same. keep one copy will make maintenance
+easier.
+
+To change from one version of ubuntu to another, simply change
+the first 2 lines of the docker files.
+
+The package name is not automated as it is complicated when
+patches get involved.
+
+You need to change this data/control file to match the
+Dockerfile's package name.
+
+You need then put the package name in the build.sh to
+copy it out.

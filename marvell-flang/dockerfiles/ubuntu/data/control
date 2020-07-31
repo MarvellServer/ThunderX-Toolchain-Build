@@ -1,0 +1,9 @@
+Package: flang
+Version: 9.0.1-tx3-ubuntu-19.10
+Section: base
+Priority: optional
+Architecture: arm64
+Depends: gcc, g++, gfortran, cmake, git, bison, gawk, rsync, python3-dev, libxml2-dev, libedit-dev, swig, libffi-dev, binutils-dev, ncurses-dev
+Maintainer: Wei Zhao <wxz@marvell.com>
+Description: flang-9.0.1 compiler
+
