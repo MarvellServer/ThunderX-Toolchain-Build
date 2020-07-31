@@ -10,7 +10,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         automake \
         autoconf \
         libtool \
-	      m4 \
+        m4 \
         gcc \
         g++ \
         gfortran \
@@ -56,14 +56,19 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
 ###############################################################################
-# ubuntu Package                                                              #
+# SETUP the toolchain                                                         #
+# !!! Please make sure this path match the installation path of the binary    #
+# package you want to install and test                                        #
+# Also you need to change the tools' path in the spec2017 config file to match#
+# this path                                                                   #
 ###############################################################################
-FROM base_ubuntu_19.10 as spec_ubuntu_19.10
 # env
 ENV INSTALL_PREFIX=/opt/flang/9.0.0
 
 # copy the deb package
 COPY data/*.deb /tmp
+
+# copy the needed libraries; this could be optional
 COPY data/libje* ${INSTALL_PREFIX}/lib/
 
 # install the toolchain
@@ -72,6 +77,7 @@ RUN dpkg -i /tmp/*.deb
 ###############################################################################
 # SPEC CPU2017                                                                #
 ###############################################################################
+FROM base_ubuntu_19.10 as spec_ubuntu_19.10
 # update paths
 ENV PATH=${INSTALL_PREFIX}/bin:/usr/local/bin:${PATH}
 

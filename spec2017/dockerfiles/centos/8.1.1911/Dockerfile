@@ -59,7 +59,11 @@ RUN update-alternatives --install /usr/bin/python-config  python-config /usr/bin
 RUN update-alternatives --install /usr/bin/pip            pip           /usr/bin/pip3           10
 
 ###############################################################################
-# SETP the toolchain                                                          #
+# SETUP the toolchain                                                         #
+# !!! Please make sure this path match the installation path of the binary    #
+# package you want to install and test                                        #
+# Also you need to change the tools' path in the spec2017 config file to match#
+# this path                                                                   #
 ###############################################################################
 ENV INSTALL_PREFIX=/opt/flang/9.0.0
 
