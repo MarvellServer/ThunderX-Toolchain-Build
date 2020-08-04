@@ -31,5 +31,4 @@ RUN mkdir /work && \
 
 CMD bash -c 'cd /work/jcstress && \
              java -jar tests-all/target/jcstress.jar && \
-             mv /tmp/jcstress/jcstress-results-*.bin.gz /app'
-
+             mv jcstress-results-*.bin.gz /app'
