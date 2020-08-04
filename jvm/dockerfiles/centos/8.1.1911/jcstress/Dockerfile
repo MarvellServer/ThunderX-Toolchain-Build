@@ -25,4 +25,11 @@ RUN mkdir /work && \
     mvn clean install
 
 # define ENTRYPOINT
-ENTRYPOINT bash -c "cd /work/jcstress && java -jar tests-all/target/jcstress.jar"
+#ENTRYPOINT bash -c "cd /work/jcstress && java -jar tests-all/target/jcstress.jar"
+
+# do CMD so we can override it...
+
+CMD bash -c 'cd /work/jcstress && \
+             java -jar tests-all/target/jcstress.jar && \
+             mv /tmp/jcstress/jcstress-results-*.bin.gz /app'
+
