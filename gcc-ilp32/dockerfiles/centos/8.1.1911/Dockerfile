@@ -36,7 +36,8 @@ RUN cd ${DIR_SOURCE} && \
 
 # clone repos : gcc-ilp32
 RUN cd ${DIR_SOURCE} && \
-    git clone git@github.com:MarvellServer/ThunderX-Toolchain-gcc-ilp32.git
+    git clone git@github.com:MarvellServer/ThunderX-Toolchain-gcc-ilp32.git \
+      -b relGCC10-strct-vec-TX3tun
 
 # update and checkout : binutils-gdb
 RUN cd ${DIR_SOURCE}/binutils-gdb && \
@@ -56,7 +57,7 @@ RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-glibc-ilp32 && \
 # update and checkout : ThunderX-Toolchain-gcc-ilp32
 RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-gcc-ilp32 && \
     git pull && \
-    git checkout relGCC10-struct_opt-vec_int_cost
+    git checkout relGCC10-strct-vec-TX3tun
 
 # download_prerequisites
 RUN cd ${DIR_SOURCE}/ThunderX-Toolchain-gcc-ilp32 && \
@@ -147,7 +148,7 @@ COPY --from=gcc-ilp32_source ${DIR_SOURCE}/ThunderX-Toolchain-glibc-ilp32 ${DIR_
 COPY --from=gcc-ilp32_source ${DIR_SOURCE}/ThunderX-Toolchain-gcc-ilp32   ${DIR_SOURCE}/ThunderX-Toolchain-gcc-ilp32
 
 # define build config
-ENV INSTALL_PREFIX=/opt/gcc-ilp32/10.0.1
+ENV INSTALL_PREFIX=/opt/gcc-ilp32/10.0.1TX3tun
 ENV TARGET aarch64-linux-gnu
 ENV MULTILIB_CONF -with-multilib-list=lp64,ilp32
 ENV LIBMVEC_CONF --enable-mathvec
@@ -189,6 +190,11 @@ ENV INIT_GCC_CONF --with-newlib --without-headers \
 RUN cd ${DIR_BUILD} && \
     mkdir -p ${BUILD_COMP}-init && \
     cd ${BUILD_COMP}-init && \
+    BASEVER=`cat ${DIR_SOURCE}/${BUILD_COMP}/gcc/BASE-VER` && \
+    (cd ${DIR_SOURCE}/${BUILD_COMP}; git rev-parse HEAD > gcc/REVISION && \
+    echo "Marvell" > gcc/DEV-PHASE) && \
+    BASEVER=$(cat ${DIR_SOURCE}/${BUILD_COMP}/gcc/BASE-VER) && \
+    export LDFLAGS="-L${INSTALL_PREFIX}/lib/gcc/aarch64-linux-gnu/${BASEVER} -lgcc" && \
     ${DIR_SOURCE}/${BUILD_COMP}/configure ${GCC_CONF} ${INIT_GCC_CONF} && \
     make -Otarget -j${NTHREADS} all-gcc all-target-libgcc | tee ${BUILD_COMP}-init-build.log && \
     make -Otarget install-gcc install-target-libgcc | tee ${BUILD_COMP}-init-install.log
@@ -248,9 +254,13 @@ ENV FINAL_GCC_CONF --enable-languages=c,c++,fortran \
 RUN cd ${DIR_BUILD} && \
     mkdir -p ${BUILD_COMP}-final && \
     cd ${BUILD_COMP}-final && \
+    (cd ${DIR_SOURCE}/${BUILD_COMP}; git rev-parse HEAD > gcc/REVISION && \
+    echo "Marvell" > gcc/DEV-PHASE) && \
+    BASEVER=$(cat ${DIR_SOURCE}/${BUILD_COMP}/gcc/BASE-VER) && \
+    export LDFLAGS="-L${INSTALL_PREFIX}/lib/gcc/aarch64-linux-gnu/${BASEVER} -lgcc" && \
     ${DIR_SOURCE}/${BUILD_COMP}/configure ${GCC_CONF} ${FINAL_GCC_CONF} && \
-    make -Otarget -j${NTHREADS} all | tee ${BUILD_COMP}-final-build.log && \
-    make -Otarget install | tee ${BUILD_COMP}-final-install.log
+    make -Oline -j${NTHREADS} all | tee ${BUILD_COMP}-final-build.log && \
+    make -Oline install | tee ${BUILD_COMP}-final-install.log
 
 ###############################################################################
 # CentOS Packaging                                                            #
