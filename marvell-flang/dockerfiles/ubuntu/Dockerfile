@@ -299,6 +299,6 @@ RUN cd /tmp && \
 
 RUN ls *.deb && \
     echo "We stop here so that you can copy the rpm file out of docker container" && \
-    echo "You can find the package at /root/rpmbuild/RPMS/aarch64"
+    echo "You can find the package at /"
 
 FROM devel_llvm9 AS devel
