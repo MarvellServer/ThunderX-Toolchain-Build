@@ -14,7 +14,7 @@ DISTRO_NAME=$(echo ${BASE_DIR} | rev | cut -d "/" -f 2-2 | rev)
 DISTRO_VERSION=$(echo ${BASE_DIR} | rev | cut -d "/" -f 1-1 | rev)
 
 # build
-IMAGE_TAG=${TOOLCHAIN_NAME}_${DISTRO_NAME}_${DISTRO_VERSION}:${DATESTRING}
+IMAGE_TAG=${TOOLCHAIN_NAME,,}_${DISTRO_NAME}_${DISTRO_VERSION}:${DATESTRING}
 docker build --add-host mirror.fileplanet.com:0.0.0.0 \
              --build-arg DATESTRING=${DATESTRING} \
              -t ${IMAGE_TAG} .
@@ -26,8 +26,8 @@ container_id=$(docker ps -a | grep ${IMAGE_TAG} | head -n1 | awk '{print $1}')
 # need to fill in the full name of the package to copy it out
 if [ "${DISTRO_NAME}" == "centos" ]
 then
-  docker cp ${container_id}:/root/rpmbuild/RPMS/aarch64/.el8.aarch64.rpm ${BASE_DIR}/
+  docker cp ${container_id}:/root/rpmbuild/RPMS/aarch64/flang-9.0.1-tx3-${DATESTRING}-0.el8.aarch64.rpm ${BASE_DIR}/
 elif [ "${DISTRO_NAME}" == "ubuntu" ]
 then
-  docker cp ${container_id}:/flang-9.0.1-tx3-20200731-ubuntu-20.04-1_arm64.deb ${BASE_DIR}/
+  docker cp ${container_id}:/flang-9.0.1-tx3-${DATESTRING}-ubuntu-20.04-1_arm64.deb ${BASE_DIR}/
 fi

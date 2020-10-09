@@ -193,6 +193,12 @@ RUN mkdir -p ${BUILD_ROOT} && \
   git clone --depth 1 https://github.com/MarvellServer/ThunderX-Toolchain-flang9.git flang9
 
 ################################################################################
+# apply glibc patch                                                            #
+# we only need this for ubuntu 20.04 build                                     #
+################################################################################
+COPY data/stime3f.c ${BUILD_ROOT}/flang9/tools/flang/runtime/flang/stime3f.c
+
+################################################################################
 # apply tx3 patch                                                              #
 # after apply the patch, please also change the PKG_NAME below                 #
 ################################################################################
