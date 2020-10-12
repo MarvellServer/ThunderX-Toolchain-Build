@@ -8,10 +8,12 @@ BASE_DIR=`pwd`
 # define date as TODAY
 DATESTRING=`date +"%Y%m%d"`
 
+#define to DISTRO_VERSION
+DISTRO_VERSION=8.1.1911
+
 # get variables
 TOOLCHAIN_NAME=$(echo ${BASE_DIR} | rev | cut -d "/" -f 4-4 | rev)
-DISTRO_NAME=$(echo ${BASE_DIR} | rev | cut -d "/" -f 2-2 | rev)
-DISTRO_VERSION=$(echo ${BASE_DIR} | rev | cut -d "/" -f 1-1 | rev)
+DISTRO_NAME=$(echo ${BASE_DIR} | rev | cut -d "/" -f 1-1 | rev)
 
 # build
 IMAGE_TAG=${TOOLCHAIN_NAME,,}_${DISTRO_NAME}_${DISTRO_VERSION}:${DATESTRING}
