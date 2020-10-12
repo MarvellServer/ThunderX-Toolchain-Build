@@ -1,0 +1,574 @@
+<?xml version="1.0"?>
+<!DOCTYPE flagsdescription
+    SYSTEM "http://www.spec.org/dtd/cpuflags2.dtd"
+>
+
+<!-- This flags file is both an example for the SPEC CPU2017 documentation and a useful flags file for results with GCC.
+
+................ You will want a nice wide window when reading this file ........................................................ 
+
+     The first three lines at the top must be exactly as shown.  They claim that the file conforms to the DTD (Document Type
+     Description) at the listed URL.  Results submitted to SPEC must use a well-formed flags file.  You can check your XML using
+     a validating parser such as RXP, http://www.ltg.ed.ac.uk/~richard/rxp.html, also included in your kit as 'specrxp'.  See:
+         http://www.spec.org/cpu2017/Docs/utility.html#specrxp.
+     Or, you can use an on-line parser, such as: 
+         http://www.cogsci.ed.ac.uk/~richard/xml-check.html
+         http://validator.w3.org/
+
+     When results are displayed at www.spec.org, the XML file is transformed to HTML (using 'flags_dump', which is on your kit).
+     You should ALSO validate the HTML version, which can be done at:
+        http://validator.w3.org/ 
+-->
+
+<!--
+     $Id: flags-simple.xml 4556 2016-07-12 16:26:14Z CloyceS $
+-->
+
+<!-- This starts the fun.  -->
+<flagsdescription>
+
+
+<!-- filename   http://www.spec.org/cpu2017/Docs/flag-description.html#filename
+                A complete (.rsf) result includes one or more embedded flags files.  When an embedded flags file is extracted, it 
+                will need a name.  The next line tells the tools what name to use when extracting.  -->
+<filename>gcc-arm-cavium</filename>
+
+
+<!-- title    http://www.spec.org/cpu2017/Docs/flag-description.html#title
+              All flag descriptions MUST have a title.  It'll be used as the page title for the full HTML version, and as for 
+              page headings in HTML reports.  -->
+<title>GNU Compiler Collection Flags For AARCH64 Used by Cavium</title>
+
+
+<!-- style    http://www.spec.org/cpu2017/Docs/flag-description.html#style
+              The style section is entirely optional.  If the default styling is not to your taste, or if you need to add styles
+              for elements in your flag descriptions, you may put it here.  As the contents should be HTML, it will save lots of
+              time to just enclose the whole thing in a CDATA section.  See:
+              http://www.spec.org/cpu2017/Docs/flag-description.html#CDATA -->
+<style>
+   <![CDATA[
+   body { background: white; }
+   ]]>
+</style>
+
+
+<!-- submit_command     http://www.spec.org/cpu2017/Docs/flag-description.html#submit_command
+                        Information about settings, programs, or scripts used in conjunction with the submit facility can go in
+                        the 'submit_command' section.  They'll be appended to the end of both the flags dump and per-result flag
+                        report, right after the flags.  As the contents should be HTML, it will save lots of time to just
+                        enclose the whole thing in a CDATA section.  See:
+                        http://www.spec.org/cpu2017/Docs/flag-description.html#CDATA -->
+<submit_command>
+   <![CDATA[
+   <p>SPECrate runs might use one of these methods to bind processes to specific processors, depending on the config file.</p>
+   <ul>
+      <li><p>Linux systems: the <tt>numactl</tt> command is commonly used.     Here is a brief guide to understanding the specific
+            command which will be found in the config file: </p>
+         <ul>
+            <li>syntax: <tt>numactl [--interleave=nodes] [--preferred=node] [--physcpubind=cpus] [--cpunodebind=nodes]
+                  [--membind=nodes] [--localalloc] command args ...</tt></li>
+            <li><tt>numactl</tt> runs processes with a specific NUMA scheduling or memory placement policy.  The policy is set for a
+               command and inherited by all of its children. </li>
+            <li><tt>--localalloc</tt> instructs numactl to keep a process memory on the local node while <tt>-m</tt> specifies which node(s) to
+               place a process memory.  </li>
+            <li><tt>--physcpubind</tt> specifies which core(s) to bind the process. In this case, copy 0 is bound to processor 0
+               etc.</li>
+            <li> For full details on using numactl, please refer to your Linux documentation, <tt>man numactl</tt></li>
+         </ul>
+      </li>
+      <li><p>Solaris systems: The <tt>pbind</tt> command is commonly used, via  
+            <br /> <b><kbd>submit=echo 'pbind -b...' > dobmk; sh dobmk</kbd></b> <br />
+            The specific command may be found in the config file; here is a brief guide to understanding that command: </p>
+         <ul>
+            <li><kbd><b>submit=</b></kbd> causes the SPEC tools to use this line when submitting jobs.</li>
+            <li><kbd><b>echo ...&gt; dobmk</b></kbd> causes the generated commands to be written to a file, namely
+               <kbd>dobmk</kbd>.</li>
+            <li><p><kbd><b>pbind -b</b></kbd> causes this copy's processes to be bound to the CPU specified by the expression that
+                  follows it.  See the config file used in the run for the exact syntax, which tends to be cumbersome because of
+                  the need to carefully quote parts of the expression.  When all expressions are evaluated, the jobs are typically
+                  distributed evenly across the system, with each chip running the same number of jobs as all other chips, and each
+                  core running the same number of jobs as all other cores.  </p>
+               <p>The pbind expression may include various elements from the SPEC toolset and from standard Unix commands, such
+                  as:</p>
+               <ul>
+                  <li><kbd><b>$BIND</b></kbd>: a reference to a value from the bind line, a line of the form
+                     "<tt>bind&nbsp;=&nbsp;n&nbsp;n&nbsp;n&nbsp;n</tt>", where each "n" is a processor number.  See <a
+                        href="http://www.spec.org/cpu2017/Docs/config.html#bind">http://www.spec.org/cpu2017/Docs/config.html#bind</a>
+                     for details on this feature.</li>
+                  <li><kbd><b>$$</b></kbd>: the current process id</li>
+                  <li><kbd><b>$SPECCOPYNUM</b></kbd>: the SPEC tools-assigned number for this copy of the benchmark.</li>
+                  <li><kbd><b>psrinfo</b></kbd>: find out what processors are available</li>
+                  <li><kbd><b>grep on-line</b></kbd>: search the <kbd>psrinfo</kbd> output for information regarding on-line cpus</li>
+                  <li><kbd><b>expr</b></kbd>: Calculate simple arithmetic expressions.  For example, the effect of binding jobs to a
+                     (quote-resolved) expression such as: <br /><tt>expr ( $SPECCOPYNUM / 4 ) * 8 + ($SPECCOPYNUM % 4 ) )</tt>
+                     <br />would be to send the jobs to processors whose numbers are:
+                     <br /><tt>0,1,2,3, 8,9,10,11, 16,17,18,19 ...</tt></li>
+                  <li><kbd><b>awk...print \$1</b></kbd>: Pick out the line corresponding to this copy of the benchmark and use the CPU
+                     number mentioned at the start of this line.</li>
+            </ul></li>
+            <li><kbd><b>sh dobmk</b></kbd> actually runs the benchmark.</li>
+      </ul></li>
+   </ul>
+   ]]>
+</submit_command>
+
+
+<!-- sw_environment     http://www.spec.org/cpu2017/Docs/flag-description.html#sw_environment
+                        Information about shell resources, environment variables, and other software options or installation
+                        settings.  They'll be included in both the flags dump and per-result flag report.  As the contents should
+                        be HTML, it will save lots of time to just enclose the whole thing in a CDATA section.  See:
+                        http://www.spec.org/cpu2017/Docs/flag-description.html#CDATA -->
+<sw_environment>
+   <![CDATA[
+   <p>One or more of the following may have been used in the run.  If so, it will be listed in the notes sections.  Here
+      is a brief guide to understanding them:</p>
+   <ul>
+
+      <li><p><b><kbd>LD_LIBRARY_PATH=&lt;directories&gt;</kbd></b>  (set via config file <tt>preENV</tt>)
+            <br />LD_LIBRARY_PATH controls the search order for libraries.  Often, it can be defaulted.  Sometimes, it is
+            explicitly set (as documented in the notes in the submission), in order to ensure that the correct versions of
+            libraries are picked up.  </p></li>
+      <li><p><b><kbd>OMP_STACKSIZE=N</kbd></b> (set via config file <tt>preENV</tt>)
+            <br />Set the stack size for subordinate threads.</p></li>
+      <li><p> <b><kbd>ulimit -s N</kbd></b><br />
+            <b><kbd>ulimit -s unlimited</kbd></b><br />
+            'ulimit' is a Unix commands, entered prior to the run.  It sets the stack size for the main process, either
+            to N kbytes or to no limit.</p> </li>
+   </ul>
+   ]]>
+</sw_environment>
+
+
+<!-- fdo_settings      http://www.spec.org/cpu2017/Docs/flag-description.html#fdo_settings
+                       Information about settings or programs used when doing feedback-directed optimization.  This section should
+                       not be used to describe flags and settings already described by <flag> entries later in the file.  It is
+                       intended primarily to describe settings for and programs used in fdo_* options.  They'll be included in
+                       both the flags dump and per-result flag report.  As the contents should be HTML, it will save lots of time
+                       to just enclose the whole thing in a CDATA section.  See
+                       http://www.spec.org/cpu2017/Docs/flag-description.html#CDATA -->
+<fdo_settings>
+   <![CDATA[
+   <p>No special commands are needed for feedback-directed optimization, other than the compiler <a
+         href="#user_F-fprofile-generate">profile</a>&nbsp;&nbsp;<a href="#user_F-fprofile-use">flags</a>.</p>
+   ]]>
+</fdo_settings>
+
+
+<!-- header            http://www.spec.org/cpu2017/Docs/flag-description.html#header
+                       The header section is entirely optional.  If it is provided, and no class is specified, then it will be
+                       inserted verbatim at the top of the flags dump and the per-result flag report.
+
+                       If a class is specified, that text will be inserted verbatim before flags of that class in the flags dump.
+                       It is omitted from the per-result flag report.
+-->
+<header>
+<![CDATA[
+<h2>Flag descriptions for GCC, the GNU Compiler Collection</h2>
+
+<p id="gnote"><b>Note:</b> The GNU Compiler Collection provides a wide array of compiler options, described in detail and readily
+   available at <a href="https://gcc.gnu.org/onlinedocs/gcc/Option-Index.html#Option-Index">
+      https://gcc.gnu.org/onlinedocs/gcc/Option-Index.html#Option-Index</a> and <a
+      href="https://gcc.gnu.org/onlinedocs/gfortran/">https://gcc.gnu.org/onlinedocs/gfortran/</a>.  This SPEC CPU flags file
+   contains excerpts from and brief summaries of portions of that documentation.</p>
+
+<p>SPEC's modifications are:<br />
+   Copyright (C) 2006-2016 Standard Performance Evaluation Corporation</p>
+
+<p>Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License,
+   Version 1.3 or any later version published by the Free Software Foundation; with the Invariant Sections being "Funding Free
+   Software", the Front-Cover Texts being (a) (see below), and with the Back-Cover Texts being (b) (see below).  A copy of the
+   license is included in your SPEC CPU kit at <tt>$SPEC/Docs/licenses/FDL.v1.3.txt</tt> and on the web at <a
+      href="http://www.spec.org/cpu2017/Docs/licenses/FDL.v1.3.txt">http://www.spec.org/cpu2017/Docs/licenses/FDL.v1.3.txt</a>.
+   A copy of "Funding Free Software" is on your SPEC CPU kit at <tt>$SPEC/Docs/licenses/fsf-funding.txt</tt> and on the web at <a
+      href="http://www.spec.org/cpu2017/Docs/licenses/fsf-funding.txt">http://www.spec.org/cpu2017/Docs/licenses/fsf-funding.txt</a>.</p>
+
+<p>(a) The FSF's Front-Cover Text is:</p>
+
+     <p style="margin-left:3em;">A GNU Manual</p>
+
+<p>(b) The FSF's Back-Cover Text is:</p>
+
+<p style="margin-left:3em;">You have freedom to copy and modify this GNU Manual, like GNU software.  Copies published by the Free
+   Software Foundation raise funds for GNU development.</p>
+
+]]>
+</header>
+
+
+<!-- =============================================================================================================================
+     flag       http://www.spec.org/cpu2017/Docs/flag-description.html#flag
+                Descriptions of flags start here and continue to the end of the file.
+                We begin with flags in the 'compiler' class, which get matched first.  
+     ============================================================================================================================= 
+-->
+
+
+<!--flag name="F-fno-unsafe-math-optimizations"
+     class="optimization">
+   <![CDATA[
+      <p>The switch <tt>-funsafe-math-optimizations</tt> allows the compiler to make certain(*) aggressive assumptions, such as
+         disregarding the programmer's intended order of operations. The run rules allow such re-ordering <a
+            href="http://www.spec.org/cpu2017/Docs/runrules.html#reordering">
+            http://www.spec.org/cpu2017/Docs/runrules.html#reordering</a>.  The rules also point out that you must get answers
+         that pass SPEC's validation requirements.  In some cases, that will mean that some optimizations must be turned off.
+      </p>
+      <p><tt>-fno-unsafe-math-optimizations</tt> turns off these(*) optimizations.  You may need to use this flag in order to get
+         certain benchmarks to validate.  Note that this is an <i>optimization</i> switch, not a portability switch.  If it is
+         needed, then in base you will need to use it consistently.  See: <a
+            href="http://www.spec.org/cpu2017/Docs/runrules.html#BaseFlags">
+            http://www.spec.org/cpu2017/Docs/runrules.html#BaseFlags</a> and <a
+            href="http://www.spec.org/cpu2017/Docs/runrules.html#MustValidate">
+            http://www.spec.org/cpu2017/Docs/runrules.html#MustValidate</a>.  </p>
+      <p style="margin-left:2em;">(*) Much more detail about which optimizations is <a href="#gnote">available</a>.</p>
+   ]]>
+</flag-->
+<flag name="GCC8_compiler_path_eater"
+     class="compiler"
+    regexp="\S+/(gcc\-8|g\+\+\-8|gfortran\-8)(?=\s|$)">
+   <!-- We are still defining our flag.
+        The opening tag had 3 attributes (name, class, regexp).  It has several more tags:
+   -->
+   <display enable="0" />  <!-- display        http://www.spec.org/cpu2017/Docs/flag-description.html#display
+                                               This causes the text that was matched to be thrown away and not reported.  (The
+                                               text can nevertheless be reviewed, and will be, if you submit your result to SPEC
+                                               for publication on its website.)
+                           -->
+   <include text="$1" />   <!-- include text   http://www.spec.org/cpu2017/Docs/flag-description.html#include_text
+                                               Wait, wait, we don't want to throw away everything; just the path.  The regexp
+                                               captures the compiler name in $1; this line puts it back into the text stream.
+                           -->
+   <example>/path/to/{gcc|g++|gfortran}-8</example>
+                           <!-- example        http://www.spec.org/cpu2017/Docs/flag-description.html#example
+                                               Although results do not include this flag (because display enable=0), we need to
+                                               print *something* when doing a flags dump (i.e. HTML rendering of this XML file).
+                                               The 'example' gives us that something.
+                           -->
+</flag>                    <!-- Done defining this flag -->
+
+
+<flag name="F-std:c99-gcc-8"
+   compilers="gcc-8"
+   class="optimization"
+   regexp="-std=c99"
+   >
+   <![CDATA[<p>
+      Sets the language dialect to include syntax from the C99 standard, such as <tt>bool</tt> and other features used in CPU2017
+      benchmarks.
+   </p>]]>
+</flag>
+
+<flag name="std:cxx03-gcc-8"
+   compilers="gxx-8"
+   class="optimization"
+   regexp="-std=c\+\+03"
+   >
+   <example>-std=c++03</example>
+   <![CDATA[<p>
+      Sets the language dialect to include syntax from the 1998 ISO C++ standard plus the 2003 technical corrigendum.
+   </p>]]>
+</flag>
+
+<flag name="std-f2003-gcc-8"
+   compilers="gfortran-8"
+   class="optimization"
+   regexp="-std=f2003"
+   >
+   <example>-std=f2003</example>
+   <![CDATA[<p>
+      Sets the language dialect to include syntax from the Fortran 2003 standard.
+   </p>]]>
+</flag>
+
+
+<flag name="gxx-8"
+   regexp="\bg\+\+\-8(?=\s|$)"
+   class="compiler">
+   <example>g++</example>
+   <![CDATA[
+   <p>Invokes the GNU C++ compiler.</p>
+   ]]>
+</flag>
+
+<flag name="gcc-8"
+   regexp="\bgcc-8(?=\s|$)"
+   class="compiler">
+   <![CDATA[
+   <p>Invokes the GNU C compiler.  </p>
+   ]]>
+</flag>
+
+<flag name="gfortran-8"
+   regexp="\bgfortran-8(?=\s|$)"
+   class="compiler">
+   <![CDATA[
+   <p>Invokes the GNU Fortran compiler.</p>
+   ]]>
+</flag>
+
+<flag name="m32-gcc-arm"
+   regexp="-mabi=ilp32"
+   class="optimization">
+   <example>-mabi=ilp32</example>
+   <![CDATA[<p>
+       Compiles for a 32-bit (ILP32) data model on 64b aarch64.
+   </p>]]>
+</flag>
+
+<flag name="F-Ofast-8"
+   class="optimization">
+   <![CDATA[<p>
+      Enable all optimizations of -O3 plus optimizations that are not valid for standard-compliant programs, such as re-ordering
+      operations without regard to parentheses.
+      <br /><a href="#gnote">Many more details are available</a>.
+   </p>]]>
+</flag>
+
+<!-- included in latest 1.0.5 flag name="F-fsigned-char"
+   class="optimization">
+   <![CDATA[<p>
+      Instructs the compiler to compile type char as signed (-fsigned-char) or unsigned (-fno-signed-char).
+	<br /><a href="#gnote">Many more details are available</a>.
+   </p>]]>
+</flag-->
+
+
+<flag name="Olevel-gcc-8"
+   compilers="gcc-8,gfortran-8,gxx-8"
+   regexp="-O\d\b"
+   class="optimization">
+   <example>-O1, -O2, -O3</example>
+   <![CDATA[<p>
+      Increases optimization levels: the higher the number, the more optimization is done.  Higher levels of optimization may
+      require additional compilation time, in the hopes of reducing execution time.  At -O, basic optimizations are performed,
+      such as constant merging and elimination of dead code.  At -O2, additional optimizations are added, such as common
+      subexpression elimination and strict aliasing.  At -O3, even more optimizations are performed, such as function inlining and
+      vectorization.
+      <br /><a href="#gnote">Many more details are available</a>.
+   </p>]]>
+</flag>
+
+
+<flag name="m64-gcc-arm"
+   regexp="-mabi=lp64"
+   class="optimization">
+   <example>-mabi=lp64</example>
+   <![CDATA[<p>
+       Compiles for a 64-bit (LP64) data model when gcc multilib is enabled.
+   </p>]]>
+</flag>
+
+<flag name="Wl-rpath-alt"
+   class="optimization"
+   regexp="-Wl,--rpath=(\S+)"
+   >
+   <example>-Wl,-rpath=/path/to/lib</example>
+   Add the specified directory to the runtime library search path used 
+   when linking an ELF executable with shared objects.
+</flag>
+
+<flag name="Wl-dlinker"
+   class="optimization"
+   regexp="-Wl,--dynamic-linker=(\S+)"
+   >
+   <example>-Wl,--dynamic-linker=/path/to/linker</example>
+   Use a specific dynamic linker when loading a binary.
+</flag>
+
+<flag name="sysroot"
+   class="optimization"
+   regexp="--sysroot=(\S+)"
+   >
+   <example>--sysroot=/path</example>
+   Use /path as the logical root directory for headers and libraries.
+</flag>
+
+<flag name="include-headers"
+   class="portability"
+   regexp="-I(\S+)"
+   >
+   <example>-I/path/to/headers</example>
+   Add the specified directory to the include search path used when 
+   compiling with a GCC compiler that may have headers conflicting 
+   with system libraries.
+</flag>
+
+<flag name="F-std-legacy" class="portability" regexp="-std=legacy">
+  Determines the language standard. The compiler acceots this base standard and GNU 
+  dialects of those standard. When a base standard is specified, the compiler 
+  accepts all programs following that standard plus those using GNU extensions 
+  that do not contradict it. 
+</flag>
+
+<flag name="F-std-gnu11" class="optimization" regexp="-std=gnu11">
+  Determines the language standard. The compiler acceots this base standard and GNU 
+  dialects of those standard. When a base standard is specified, the compiler 
+  accepts all programs following that standard plus those using GNU extensions 
+  that do not contradict it. 
+</flag>
+
+<flag name="F-std-gnu90" class="optimization" regexp="-std=gnu90">
+  Determines the language standard. The compiler acceots this base standard and GNU 
+  dialects of those standard. When a base standard is specified, the compiler 
+  accepts all programs following that standard plus those using GNU extensions 
+  that do not contradict it. 
+</flag>
+
+<flag name="flto-multi"
+   class="optimization"
+   regexp="-flto=(\S+)"
+   >
+   <example>-flto=32</example>
+   Use link time optimizations, and enable multiple compilation threads.
+</flag>
+
+<flag name="F-fpermissive"
+     class="optimization"
+	 regexp="-fpermissive">
+	 Disable optimizations for floating-point arithmetic that assume 
+	 that arguments and results are not NaNs or +-Infs.
+</flag>
+
+<!--flag already included in latest 1.0.5 name="F-fno-aggressive-loop-optimizations"
+        class="optimization"
+        regexp="-fno-aggressive-loop-optimizations">
+        Disable aggressive loop optimizations.
+</flag-->
+
+<!-- SG: already in 1.0.5 flag name="F-fno-strict-aliasing"
+	class="optimization"
+	regexp="-fno-strict-aliasing">
+	Disable strict Aliasing.
+</flag-->
+
+<flag name="F-fno-finite-math-only"
+     class="optimization"
+	 regexp="-fno-finite-math-only">
+	 Disable optimizations for floating-point arithmetic that assume 
+	 that arguments and results are not NaNs or +-Infs.
+</flag>
+
+<flag name="F-fomit-frame-pointer"
+     class="optimization"
+     regexp="-fomit-frame-pointer">
+     Don't keep the frame pointer in a register for functions that don't need one. 
+     This avoids the instructions to save, set up and restore frame pointers; 
+     it also makes an extra register available in many functions.
+</flag>
+
+<flag name="F-std-c11"
+   class="optimization"
+   regexp="-std=c11"
+   >
+      Sets the language dialect to include syntax from the C11 standard, 
+	  such as bool and other features used in CPU2017
+      benchmarks.
+</flag>
+
+<flag name="F-common"
+   class="optimization"
+   regexp="-fcommon"
+   >
+      Places uninitialized global variables in a common block. 
+</flag>
+
+<flag name="F-profile-partial-training"
+   class="optimization"
+   regexp="-fprofile-partial-training"
+   >
+   With -fprofile-partial-training profile feedback will be ignored for all functions not executed during the train run leading them to be optimized as if they were compiled without profile feedback.
+</flag>
+
+<flag name="F-reg-struct-return"
+   class="optimization"
+   regexp="-freg-struct-return"
+   >
+   Return struct and union values in registers when possible.
+</flag>
+
+<flag name="F-no-vect-cost-model"
+   class="optimization"
+   regexp="-fno-vect-cost-model"
+   >
+      Disable the vector cost model used for vectorization. 
+</flag>
+
+<flag name="F-short-enums"
+   class="optimization"
+   regexp="-fshort-enums"
+   >
+   Allocate to an enum type only as many bytes as it needs for the declared range of possible values. Specifically, the enum type is equivalent to the smallest integer type that has enough room. 
+</flag>
+
+<flag name="F-no-inline-functions-called-once"
+   class="optimization"
+   regexp="-fno-inline-functions-called-once"
+   >
+      Do not inline functions called once. 
+</flag>
+
+<flag name="F-std-c03"
+   class="optimization"
+   regexp="-std=c\+\+03"
+   >
+      Sets the language dialect to include syntax from the C11 standard,
+          such as bool and other features used in CPU2017
+      benchmarks.
+</flag>
+
+<flag name="F-frepack-arrays"
+     class="optimization"
+     regexp="-frepack-arrays">
+	 In some circumstances GNU Fortran may pass assumed shape array sections 
+	 via a descriptor describing a noncontiguous area of memory. 
+	 This option adds code to the function prologue to repack the data 
+	 into a contiguous block at runtime.
+</flag>
+
+<flag name="F-mno-pc-relative-literal-loads"
+     class="optimization"
+     regexp="-mno-pc-relative-literal-loads">
+	 Enable or disable PC-relative literal loads. 
+	 With this option literal pools are accessed using a single instruction 
+	 and emitted after each function.
+</flag>
+
+<flag name="P-ipa-cp-eval-threshold"
+   regexp="--param ipa-cp-eval-threshold=(\d+)(?=\s|$)"
+   class="optimization"
+   >
+   <example>--param ipa-cp-eval-threshold=1</example>
+   Calculates score of cloning profitability heuristics.
+</flag>
+
+<flag name="P-ipa-cp-unit-growth"
+   regexp="--param ipa-cp-unit-growth=(\d+)(?=\s|$)"
+   class="optimization"
+   >
+   <example>--param ipa-cp-unit-growth=1</example>
+   How much can given compilation unit grow because of the interprocedural constant propagation (in percent)
+</flag>
+
+<flag name="P-prefetch-dynamic-strides"
+   regexp="--param prefetch-dynamic-strides=(\d+)(?=\s|$)"
+   class="optimization"
+   >
+   <example>--param prefetch-dynamic-strides=1</example>
+   Whether the loop array prefetch pass should issue software prefetch hints for strides that are non-constant. In some cases this may be beneficial, though the fact the stride is non-constant may make it hard to predict when there is clear benefit to issuing these hints.
+
+   Set to 1 if the prefetch hints should be issued for non-constant strides.
+</flag>
+
+<flag name="libmvec"
+      regexp="-muse-libmvec"
+      class="optimization">
+      Use vector math library, which contains functions to evaluate common
+      mathetmatical functions for several arguments at once.
+</flag>
+
+<!--flag name="F-ljemalloc" class="optimization">
+	Use the jemalloc library, which is a general purpose malloc implementation 
+	that emphasizes fragmentation avoidance and scalable concurrency support. 
+JEMALLOC flag already part of std flags from 1.0.5
+</flag-->
+
+</flagsdescription>
